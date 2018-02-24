@@ -39,7 +39,7 @@ func getCommands() []cli.Command {
 
                     Action: func(c *cli.Context) error {
                         if c.Bool("all") {
-                            for key,_ := range helper.Names {
+                            for key,_ := range helper.Tables {
                                 err := helper.CreateTable(local, key)
                                 check(err)
                             }
