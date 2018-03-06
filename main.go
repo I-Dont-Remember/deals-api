@@ -3,8 +3,8 @@ package main
 import (
     "os"
     "github.com/urfave/cli"
-    helper "github.com/I-Dont-Remember/dealsapi/awshelper"
-    tools "github.com/I-Dont-Remember/dealsapi/tools"
+    helper "github.com/I-Dont-Remember/deals-api/awshelper"
+    tools "github.com/I-Dont-Remember/deals-api/tools"
 )
 
 var (
