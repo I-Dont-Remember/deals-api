@@ -1,24 +1,16 @@
 package main
 
 import (
-    "fmt"
     "os"
     "github.com/urfave/cli"
-    helper "github.com/I-Dont-Remember/gimmedeals/api/awshelper"
+    helper "github.com/I-Dont-Remember/dealsapi/awshelper"
+    tools "github.com/I-Dont-Remember/dealsapi/tools"
 )
 
 var (
     // assume local is true for now
     local = true
 )
-
-// check consolidates a common error checking mechanism into one call
-func check(err error) {
-    if err != nil {
-        fmt.Println(err.Error())
-        os.Exit(1)
-    }
-}
 
 // getCommands returns the full list of commands for the CLI tool
 func getCommands() []cli.Command {
@@ -41,12 +33,12 @@ func getCommands() []cli.Command {
                         if c.Bool("all") {
                             for key,_ := range helper.Tables {
                                 err := helper.CreateTable(local, key)
-                                check(err)
+                                tools.Check(err)
                             }
                         } else {
                             name := c.Args().First()
                             err := helper.CreateTable(local, name)
-                           check(err)
+                            tools.Check(err)
                         }
                         return nil
                     },
@@ -58,8 +50,8 @@ func getCommands() []cli.Command {
 
 func main() {
     app := cli.NewApp()
-    app.Name = "tools"
-    app.Usage = "Tools for Madtown Deals repo"
+    app.Name = "cli"
+    app.Usage = "cli for Madtown Deals repo"
 
     app.Commands = getCommands()
 
