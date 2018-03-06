@@ -3,3 +3,10 @@ go:
   - master
 
 script: go test ./tools/
+
+# To access personal repos over https
+before_install:
+  - cp .netrc ~
+  - echo -e "  password $GO_GET_TOKEN\n" >> ~/.netrc
+  - chmod 600 .netrc
+
