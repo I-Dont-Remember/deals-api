@@ -1,10 +1,13 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -49,12 +52,16 @@ func checkErr(e error) {
 	}
 }
 
-func createLocationID() string {
-	return "0"
+func createLocationID(name, address string) string {
+	data := []byte(strings.Join([]string{name, address}, ""))
+	hexHash := md5.Sum(data)
+	return hex.EncodeToString((hexHash[:]))
 }
 
-func createDealID() string {
-	return "0"
+func createDealID(lid, deal string) string {
+	data := []byte(strings.Join([]string{lid, deal}, ""))
+	hexHash := md5.Sum(data)
+	return hex.EncodeToString(hexHash[:])
 }
 
 // uses the dealInfo and location struct to pull out toml contents
@@ -115,14 +122,14 @@ func uploadDeals() {
 // TODO: see if we should add error handling to struct creation
 func jsonifyLocations(data []locationInfo) []location {
 	// convert all the locationInfo into json structs
-	lID := createLocationID()
-	dID := createDealID()
-
 	locations := make([]location, len(data))
 	for i, l := range data {
+		lID := createLocationID(l.Name, l.Address)
+
 		// convert this specific locations dealInfo into json struct
 		deals := make([]deal, len(l.Deal))
 		for j, d := range l.Deal {
+			dID := createDealID(lID, d.Info)
 			deals[j] = deal{dID, lID, d.Info, d.Days}
 		}
 		locations[i] = location{lID, l.Name, l.Campus, l.Address, deals}
