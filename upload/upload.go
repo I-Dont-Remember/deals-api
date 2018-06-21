@@ -10,11 +10,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+
 	"github.com/BurntSushi/toml"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+)
+
+var (
+	LOCATION_TABLE = "Locations"
+	DEAL_TABLE     = "Deals"
 )
 
 // json deal struct for easy AWS upload; ID is md5 hash of location ID + deal
@@ -137,32 +143,66 @@ func getLocationsFromDir(dirPath string) ([]locationInfo, error) {
 	return locations, nil
 }
 
+func uploadDeal(svc *dynamodb.DynamoDB, d deal) error {
+	marshalledDeal, err := dynamodbattribute.MarshalMap(d)
+	if err != nil {
+		return err
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      marshalledDeal,
+		TableName: aws.String(DEAL_TABLE),
+	}
+	_, err = svc.PutItem(input)
+	// just show err and keep going
+	if err != nil {
+		fmt.Println("[!] Error uploading deal:", err)
+	} else {
+		fmt.Println("[*] Uploaded deal:", d)
+	}
+
+	return nil
+}
+
+func uploadLocation(svc *dynamodb.DynamoDB, l location) error {
+	marshalledLocation, err := dynamodbattribute.MarshalMap(l)
+	if err != nil {
+		return err
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      marshalledLocation,
+		TableName: aws.String(LOCATION_TABLE),
+	}
+	_, err = svc.PutItem(input)
+	// Just show it so we know and keep going
+	if err != nil {
+		fmt.Println("[!] Error uploading location:", err)
+	} else {
+		fmt.Println("[*] Uploaded location:", l)
+
+	}
+
+	return nil
+}
+
 func uploadItems(locations []location, deals []deal, notLocal bool) error {
 	svc := getSVC(notLocal)
 
 	input := &dynamodb.ListTablesInput{}
 
 	result, err := svc.ListTables(input)
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case dynamodb.ErrCodeInternalServerError:
-				fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
-		return nil
+	checkErr(err)
+
+	fmt.Println("Existing tables:", result)
+	for _, l := range locations {
+		err := uploadLocation(svc, l)
+		checkErr(err)
 	}
-
-	fmt.Println(result)
-	// for _, l := range locations {
-
-	// }
+	for _, d := range deals {
+		err = uploadDeal(svc, d)
+		checkErr(err)
+	}
 	return nil
 
 }
@@ -178,13 +218,9 @@ func jsonifyLocations(data []locationInfo) ([]location, []deal) {
 		// convert this specific locations dealInfo into json struct
 		// TODO: this is not an efficient way of doing this,
 		// but currently not worth time to fix
-		locationDeals := make([]deal, len(l.Deal))
-		for j, d := range l.Deal {
+		for _, d := range l.Deal {
 			dID := createDealID(lID, d.Info)
-			locationDeals[j] = deal{dID, lID, d.Info, d.Days}
-		}
-		for _, d := range locationDeals {
-			deals = append(locationDeals, d)
+			deals = append(deals, deal{dID, lID, d.Info, d.Days})
 		}
 
 		locations[i] = location{lID, l.Name, l.Campus, l.Address}
@@ -203,12 +239,7 @@ func main() {
 	allLocationInfo, err := getLocationsFromDir(dirPath)
 	checkErr(err)
 
-	fmt.Println(allLocationInfo)
-
 	locations, deals := jsonifyLocations(allLocationInfo)
-
-	fmt.Println(locations)
-	fmt.Println(deals)
 
 	// upload all the deals, have to do locations first to make sure they exist and we aren't referencing empty ID's
 	err = uploadItems(locations, deals, notLocal)
