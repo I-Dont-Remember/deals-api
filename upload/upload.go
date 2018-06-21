@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,6 +11,10 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
 // json deal struct for easy AWS upload; ID is md5 hash of location ID + deal
@@ -28,7 +33,7 @@ type location struct {
 	// What will we do about locations on multiple campuses?
 	Campus  string `json:"campus"`
 	Address string `json:"address"`
-	Deals   []deal
+	//Deals   []deal
 }
 
 // struct for toml deal info
@@ -50,6 +55,23 @@ func checkErr(e error) {
 		fmt.Println("Error: ", e)
 		os.Exit(1)
 	}
+}
+
+func getSVC(notLocal bool) *dynamodb.DynamoDB {
+	sess, err := session.NewSession(&aws.Config{Region: aws.String("us-east-2")})
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	localSess, err := session.NewSession(&aws.Config{
+		Region:   aws.String("us-east-2"),
+		Endpoint: aws.String("http://localhost:4569/")})
+
+	if notLocal {
+		return dynamodb.New(sess)
+	}
+	return dynamodb.New(localSess)
 }
 
 func createLocationID(name, address string) string {
@@ -115,31 +137,67 @@ func getLocationsFromDir(dirPath string) ([]locationInfo, error) {
 	return locations, nil
 }
 
-func uploadDeals() {
-	fmt.Println("here's where ya upload")
+func uploadItems(locations []location, deals []deal, notLocal bool) error {
+	svc := getSVC(notLocal)
+
+	input := &dynamodb.ListTablesInput{}
+
+	result, err := svc.ListTables(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeInternalServerError:
+				fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return nil
+	}
+
+	fmt.Println(result)
+	// for _, l := range locations {
+
+	// }
+	return nil
+
 }
 
 // TODO: see if we should add error handling to struct creation
-func jsonifyLocations(data []locationInfo) []location {
+func jsonifyLocations(data []locationInfo) ([]location, []deal) {
 	// convert all the locationInfo into json structs
 	locations := make([]location, len(data))
+	deals := []deal{}
 	for i, l := range data {
 		lID := createLocationID(l.Name, l.Address)
 
 		// convert this specific locations dealInfo into json struct
-		deals := make([]deal, len(l.Deal))
+		// TODO: this is not an efficient way of doing this,
+		// but currently not worth time to fix
+		locationDeals := make([]deal, len(l.Deal))
 		for j, d := range l.Deal {
 			dID := createDealID(lID, d.Info)
-			deals[j] = deal{dID, lID, d.Info, d.Days}
+			locationDeals[j] = deal{dID, lID, d.Info, d.Days}
 		}
-		locations[i] = location{lID, l.Name, l.Campus, l.Address, deals}
+		for _, d := range locationDeals {
+			deals = append(locationDeals, d)
+		}
+
+		locations[i] = location{lID, l.Name, l.Campus, l.Address}
 	}
 
-	return locations
+	return locations, deals
 }
 
 func main() {
 	dirPath := "../resources/location-files/"
+	var notLocal bool
+	flag.BoolVar(&notLocal, "not-local", false, "Flag to non-local DynamoDB")
+	flag.Parse()
 
 	// loop through directory of toml files to gather all locations & deals
 	allLocationInfo, err := getLocationsFromDir(dirPath)
@@ -147,10 +205,12 @@ func main() {
 
 	fmt.Println(allLocationInfo)
 
-	locations := jsonifyLocations(allLocationInfo)
+	locations, deals := jsonifyLocations(allLocationInfo)
 
 	fmt.Println(locations)
+	fmt.Println(deals)
 
 	// upload all the deals, have to do locations first to make sure they exist and we aren't referencing empty ID's
-
+	err = uploadItems(locations, deals, notLocal)
+	checkErr(err)
 }
