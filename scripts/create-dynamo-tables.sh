@@ -8,12 +8,12 @@ fi
 
 echo "Creating Deals table..."
 $command dynamodb create-table --table-name Deals \
-    --attribute-definitions AttributeName=ID,AttributeType=S \
-    --key-schema AttributeName=ID,KeyType=HASH \
+    --attribute-definitions AttributeName=id,AttributeType=S \
+    --key-schema AttributeName=id,KeyType=HASH \
     --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
 
 echo "Creating Locations table..."
 $command dynamodb create-table --table-name Locations \
-    --attribute-definitions AttributeName=ID,AttributeType=S \
-    --key-schema AttributeName=ID,KeyType=HASH \
+    --attribute-definitions AttributeName=id,AttributeType=S \
+    --key-schema AttributeName=id,KeyType=HASH \
     --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
