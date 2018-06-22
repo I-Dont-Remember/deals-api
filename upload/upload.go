@@ -230,13 +230,19 @@ func jsonifyLocations(data []locationInfo) ([]location, []deal) {
 }
 
 func main() {
-	dirPath := "../resources/location-files/"
 	var notLocal bool
+	var path string
+	flag.StringVar(&path, "d", "", "/path/to/tomlfile/directory/, required")
 	flag.BoolVar(&notLocal, "not-local", false, "Flag to non-local DynamoDB")
 	flag.Parse()
 
+	if path == "" {
+		fmt.Println("Usage:")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
 	// loop through directory of toml files to gather all locations & deals
-	allLocationInfo, err := getLocationsFromDir(dirPath)
+	allLocationInfo, err := getLocationsFromDir(path)
 	checkErr(err)
 
 	locations, deals := jsonifyLocations(allLocationInfo)
