@@ -29,11 +29,8 @@ cd "$dirPath" || echo "[!] couldn't cd to $dirPath." || exit 1
 GOOS=linux go build -o main
 zip deployment.zip main
 
-echo "Creating function $lambdaName..."
-$command lambda create-function --function-name "$lambdaName" \
-    --runtime go1.x \
-    --role arn:aws:iam::174225498255:role/DealsLambda \
-    --handler main \
+echo "Updating function $lambdaName..."
+$command lambda update-function-code --function-name "$lambdaName" \
     --zip-file fileb://deployment.zip
 
 echo "Cleaning up repo..."
