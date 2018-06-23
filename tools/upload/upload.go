@@ -195,10 +195,12 @@ func uploadItems(locations []location, deals []deal, notLocal bool) error {
 	checkErr(err)
 
 	fmt.Println("Existing tables:", result)
+	fmt.Printf("Trying to upload %d locations...\n", len(locations))
 	for _, l := range locations {
 		err := uploadLocation(svc, l)
 		checkErr(err)
 	}
+	fmt.Printf("Trying to upload %d deals...\n", len(deals))
 	for _, d := range deals {
 		err = uploadDeal(svc, d)
 		checkErr(err)
