@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	LOCATION_TABLE = "Locations"
-	DEAL_TABLE     = "Deals"
+	LOCATION_TABLE = "devLocations"
+	DEAL_TABLE     = "devDeals"
 )
 
 // json deal struct for easy AWS upload; ID is md5 hash of location ID + deal
@@ -231,10 +231,17 @@ func jsonifyLocations(data []locationInfo) ([]location, []deal) {
 
 func main() {
 	var notLocal bool
+	var notDev bool
 	var path string
 	flag.StringVar(&path, "d", "", "/path/to/tomlfile/directory/, required")
 	flag.BoolVar(&notLocal, "not-local", false, "Flag to non-local DynamoDB")
+	flag.BoolVar(&notDev, "not-dev", false, "Flag to not use the dev tables but the Prod")
 	flag.Parse()
+
+	if notDev {
+		LOCATION_TABLE = "Locations"
+		DEAL_TABLE = "Deals"
+	}
 
 	if path == "" {
 		fmt.Println("Usage:")
