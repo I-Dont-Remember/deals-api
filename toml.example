@@ -1,0 +1,13 @@
+name = "Bar name"
+website = "http://barsite.com/"
+campus = "UW-Madison"
+Address = "address St,Madison,WI 53703"
+
+[[deal]]
+info = "deal information"
+// days (2letter max) M, Tu, W, Th, F, Sa, Su
+days = ["M", "Tu", "W", "Th", "F", "Sa", "Su"]
+// types are f- food, b- beer, s- shots, m - mixers, o - other
+type = ["f"]
+// no idea yet, have to handle stuff like 'til close'
+time = "3-10pm"

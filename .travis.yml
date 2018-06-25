@@ -2,7 +2,8 @@ language: go
 go:
   - master
 
-script: go test ./tools/
+script: 
+  - bash travis-test.sh
 
 # To access personal repos over https
 before_install:
