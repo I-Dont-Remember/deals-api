@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	helper "github.com/I-Dont-Remember/deals-api/awshelper"
+	helper "github.com/I-Dont-Remember/deals-api/tools/awshelper"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 

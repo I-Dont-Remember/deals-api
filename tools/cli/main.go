@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	helper "github.com/I-Dont-Remember/deals-api/awshelper"
 	tools "github.com/I-Dont-Remember/deals-api/tools"
+	helper "github.com/I-Dont-Remember/deals-api/tools/awshelper"
 	"github.com/urfave/cli"
 )
 

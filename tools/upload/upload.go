@@ -20,7 +20,7 @@ import (
 
 var (
 	LOCATION_TABLE = "devLocations"
-	DEAL_TABLE     = "devDeals"
+	DEAL_TABLE     = "TESTDB"
 )
 
 // json deal struct for easy AWS upload; ID is md5 hash of location ID + deal
