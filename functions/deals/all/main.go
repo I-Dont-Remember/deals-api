@@ -58,7 +58,7 @@ func getDeals() []deal {
 	var deals []deal
 
 	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
-	if os.Getenv("LAMBDA_ENV") == "TEST" {
+	if os.Getenv("LAMBDA_ENV") == "TEST_LOCAL" {
 		// Use local
 		sess, err = session.NewSession(
 			&aws.Config{
