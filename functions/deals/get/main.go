@@ -18,7 +18,7 @@ import (
 var (
 	region        = "us-east-2"
 	output        *dynamodb.ScanOutput
-	tableName     = "devDeals"
+	tableName     = "Deals"
 	localEndpoint = "http://localhost:4569/"
 )
 

@@ -1,0 +1,40 @@
+service: deals-api
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: us-east-2
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: 
+        # Can either do by specific arn or wildcard
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/*"
+
+functions:
+  get-deals:
+    handler: bin/get-deals
+    events:
+      - http:
+          path: deals
+          method: get
+
+  post-deals:
+    handler: bin/post-deals
+    events:
+      - http:
+          path: deals
+          method: post
+
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
