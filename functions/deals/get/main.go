@@ -3,23 +3,26 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 	"strings"
+
+	"github.com/I-Dont-Remember/deals-api/pkg/helpers"
+
+	"github.com/I-Dont-Remember/deals-api/pkg/db"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 )
 
 var (
-	region        = "us-east-2"
-	output        *dynamodb.ScanOutput
-	tableName     = "Deals"
-	localEndpoint = "http://localhost:4569/"
+	region    = "us-east-2"
+	output    *dynamodb.ScanOutput
+	tableName = "newDeals"
 )
 
 // Deal is a rough analogue to the DynamoDB schema;  should move to a different file to be DRY
@@ -32,11 +35,11 @@ type deal struct {
 }
 
 func buildParams() *dynamodb.ScanInput {
-	filt := expression.Name("Id").AttributeExists()
-	proj := expression.NamesList(expression.Name("Id"),
-		expression.Name("Day"),
-		expression.Name("Location"),
-		expression.Name("Deal"))
+	filt := expression.Name("id").AttributeExists()
+	proj := expression.NamesList(expression.Name("id"),
+		expression.Name("days"),
+		expression.Name("info"),
+		expression.Name("location"))
 
 	expr, err := expression.NewBuilder().WithFilter(filt).WithProjection(proj).Build()
 	if err != nil {
@@ -57,23 +60,10 @@ func buildParams() *dynamodb.ScanInput {
 func getDeals() []deal {
 	var deals []deal
 
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
-	if os.Getenv("LAMBDA_ENV") == "TEST_LOCAL" {
-		// Use local
-		sess, err = session.NewSession(
-			&aws.Config{
-				Region:   aws.String(region),
-				Endpoint: aws.String(localEndpoint),
-			})
-	}
+	svc, err := db.CreateConnection(region)
 	if err != nil {
-		log.Print("Error getting session...", err)
-		log.Print(err)
-		// this might not be good inside lambda function???
-		os.Exit(2)
+		log.Print("Error with creating connection:", err)
 	}
-
-	svc := dynamodb.New(sess)
 	params := buildParams()
 
 	result, err := svc.Scan(params)
@@ -145,33 +135,17 @@ func filterDeals(list []deal, params map[string]string) []deal {
 
 // Handler processes the DynamoDB query response and returns formatted json body
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	log.Print("Fetching deals...")
-
-	if os.Getenv("LAMBDA_ENV") == "TEST" {
-		// TODO: error handle if it doesn't exist
-		tableName = os.Getenv("TEST_DB")
-	}
-
 	deals := getDeals()
+	log.Printf("Fetched %d deals from %s", len(deals), tableName)
 	filtered := filterDeals(deals, request.QueryStringParameters)
-	log.Print("Filtered deals...")
+	log.Printf("Filtered deals has %d deals", len(filtered))
 	marshalled, err := json.Marshal(filtered)
 	if err != nil {
 		log.Print("Error marshalling deals...")
-		os.Exit(2)
+		return helpers.ErrResponse("Failed marshalling deals", err, http.StatusInternalServerError)
 	}
 
-	// These are necessary alongside API Gateway CORS enabling
-	headers := map[string]string{
-		"Content-Type":                "application/json",
-		"Access-Control-Allow-Origin": "*",
-	}
-
-	return events.APIGatewayProxyResponse{
-		Body:       string(marshalled),
-		StatusCode: 200,
-		Headers:    headers,
-	}, nil
+	return helpers.Response(string(marshalled), http.StatusOK)
 }
 
 func main() {

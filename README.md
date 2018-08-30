@@ -12,6 +12,13 @@ Deprecated directory will last until we feel it isn't useful as a reference poin
 ### Deployment / Serverless
 This API uses the Serverless framework to make provisioning new Lambda/API Gateway setups or updating them a breeze.  We could loop in creating the DynamoDB under resources, but for persistent things like data it seems like its' better to keep it separate because otherwise CloudFormation(which is the magic of Serverless) gets confused because it already exists and fails.  
 
+To deploy `dev` stage:
+```
+make deploy
+```
+
+other stages to be figured out as we progress, since it would be nice to have one command deploys for separate environments without doing a bunch of janky stuff.
+
 ### Upload
 First make sure the tables exist (`/scripts/create-dynamo-tables.sh`)  
 Use a compiled binary or `go run` with `tools/upload/upload.go` and the input files directory. Use the `toml.example` file for how to structure them.  
@@ -20,22 +27,27 @@ Use a compiled binary or `go run` with `tools/upload/upload.go` and the input fi
 Once we have gotten past the initial stage, we will be using SemVer as it is fairly common and easy to grasp. Specifics of how it will be gated will be documented once completed.
 
 ### Endpoints (and the connected Lambda functions)
+For now, several endpoints are protected with a secret key (anything that isn't read-only) which is stored in environment variables.  This isn't the greatest security, 
+but since the public application should never make these calls it is sufficient.  
+###### Note: these docs should eventually be auto-generated (Maybe we switch to Swagger?)
 
 #### /deals (GET)
-_/functions/deals/all_  
-Desc: Acquire deals  
+Desc: acquire deals  
 Query Options
   - Day=[M,Tu,W,Th,F,Sa,Su]
   - Location=\<ID string\>
   - (Done by client for now) Time
 
-#### /locations (GET)
-_/functions/locations/all_  
-Desc: Acquire locations
+#### /deals (POST)
+Desc: add new deal
 
-#### /locations/[name] (GET)
-_/functions/locations/getID_  
-Desc: Get location ID from name
+#### /locations (GET)
+Desc: acquire locations
+
+#### /locations (POST)
+Desc: add new location
 
 ### CI
 To setup with Travis CI, need AWS credentials as env variables; as well as a GitHub Personal Access Token since netrc uses HTTPS. 
+
+Travis has been turned off for now until we have actually built anything worth running on a CI loop.

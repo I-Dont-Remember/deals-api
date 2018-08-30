@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/I-Dont-Remember/deals-api/pkg/db"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 
 	"github.com/BurntSushi/toml"
@@ -19,8 +21,9 @@ import (
 )
 
 var (
-	LOCATION_TABLE = "devLocations"
-	DEAL_TABLE     = "TESTDB"
+	region        = "us-east-2"
+	locationTable = "devLocations"
+	dealTable     = "devDeals"
 )
 
 // json deal struct for easy AWS upload; ID is md5 hash of location ID + deal
@@ -151,7 +154,7 @@ func uploadDeal(svc *dynamodb.DynamoDB, d deal) error {
 
 	input := &dynamodb.PutItemInput{
 		Item:      marshalledDeal,
-		TableName: aws.String(DEAL_TABLE),
+		TableName: aws.String(dealTable),
 	}
 	_, err = svc.PutItem(input)
 	// just show err and keep going
@@ -172,7 +175,7 @@ func uploadLocation(svc *dynamodb.DynamoDB, l location) error {
 
 	input := &dynamodb.PutItemInput{
 		Item:      marshalledLocation,
-		TableName: aws.String(LOCATION_TABLE),
+		TableName: aws.String(locationTable),
 	}
 	_, err = svc.PutItem(input)
 	// Just show it so we know and keep going
@@ -186,15 +189,13 @@ func uploadLocation(svc *dynamodb.DynamoDB, l location) error {
 	return nil
 }
 
-func uploadItems(locations []location, deals []deal, notLocal bool) error {
-	svc := getSVC(notLocal)
+func uploadItems(locations []location, deals []deal) error {
+	svc, err := db.CreateConnection(region)
+	if err != nil {
+		fmt.Println("Failed getting connection: ", err)
+		os.Exit(1)
+	}
 
-	input := &dynamodb.ListTablesInput{}
-
-	result, err := svc.ListTables(input)
-	checkErr(err)
-
-	fmt.Println("Existing tables:", result)
 	fmt.Printf("Trying to upload %d locations...\n", len(locations))
 	for _, l := range locations {
 		err := uploadLocation(svc, l)
@@ -240,9 +241,14 @@ func main() {
 	flag.BoolVar(&notDev, "not-dev", false, "Flag to not use the dev tables but the Prod")
 	flag.Parse()
 
+	// assume local to help prevent stupid mistakes
+	if !notLocal {
+		os.Setenv("API_ENV", "local")
+	}
+
 	if notDev {
-		LOCATION_TABLE = "Locations"
-		DEAL_TABLE = "Deals"
+		locationTable = "Locations"
+		dealTable = "Deals"
 	}
 
 	if path == "" {
@@ -257,6 +263,6 @@ func main() {
 	locations, deals := jsonifyLocations(allLocationInfo)
 
 	// upload all the deals, have to do locations first to make sure they exist and we aren't referencing empty ID's
-	err = uploadItems(locations, deals, notLocal)
+	err = uploadItems(locations, deals)
 	checkErr(err)
 }

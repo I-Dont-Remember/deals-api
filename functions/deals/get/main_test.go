@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-	"os"
 	"strings"
 	"testing"
 
@@ -137,12 +135,12 @@ func TestHandler(t *testing.T) {
 		// },
 	}
 
-	os.Setenv("LAMBDA_ENV", "TEST")
-	os.Setenv("TEST_DB", "TESTDB")
+	//os.Setenv("LAMBDA_ENV", "TEST")
+	//os.Setenv("TEST_DB", "TESTDB")
 	for _, test := range tests {
 		response, err := Handler(test.request)
 		if err == nil {
-			log.Print(response)
+			//log.Print(response)
 		}
 		assert.NotEqual(t, test.expect, response.Body)
 	}

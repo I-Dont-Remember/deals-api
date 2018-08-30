@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	tablename = "devDeals"
+	tablename = "devLocations"
 	region    = "us-east-2"
 )
 
@@ -43,6 +43,7 @@ func formatInput(dict map[string]string, key string) (*dynamodb.PutItemInput, er
 	}, nil
 }
 
+// Handler is the lambda handler
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	body := getMapFromJSON(request.Body)
 
@@ -66,13 +67,14 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	input, err := formatInput(body, secretKey)
 	if err != nil {
-		return helpers.ErrResponse("Can't put deal into Dynamo", err, http.StatusBadRequest)
+		return helpers.ErrResponse("", err, http.StatusBadRequest)
 	}
 
 	_, err = svc.PutItem(input)
 	// result appears to just be empty json on success {}
 	if err != nil {
 		log.Print(err.Error())
+		return helpers.ErrResponse("Can't put location into Dynamo", err, http.StatusInternalServerError)
 	}
 
 	return helpers.Response("", http.StatusOK)

@@ -32,6 +32,19 @@ functions:
           path: deals
           method: post
 
+  get-locations:
+    handler: bin/get-locations
+    events:
+      - http:
+          path: locations
+          method: get
+
+  post-locations:
+    handler: bin/post-locations
+    events:
+      - http:
+          path: locations
+          method: post
 
 package:
   exclude:
