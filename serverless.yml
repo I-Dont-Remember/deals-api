@@ -4,6 +4,8 @@ provider:
   name: aws
   runtime: go1.x
   region: us-east-2
+  environment:
+    API_ENV: prod
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -14,40 +16,89 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: 
-        # Can either do by specific arn or wildcard
+        # Can either do by specific arn or wildcard ** Should probably not do this so insecurely **
         - "arn:aws:dynamodb:${self:provider.region}:*:table/*"
-
-functions:
-  get-deals:
-    handler: bin/get-deals
-    events:
-      - http:
-          path: deals
-          method: get
-
-  post-deals:
-    handler: bin/post-deals
-    events:
-      - http:
-          path: deals
-          method: post
-
-  get-locations:
-    handler: bin/get-locations
-    events:
-      - http:
-          path: locations
-          method: get
-
-  post-locations:
-    handler: bin/post-locations
-    events:
-      - http:
-          path: locations
-          method: post
 
 package:
   exclude:
     - ./**
   include:
     - ./bin/**
+
+functions:
+    get-campuses:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: campuses
+            method: get
+
+    get-campus:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: /{slug}
+            method: get
+
+    get-locations:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: /{slug}/locations
+            method: get
+
+    get-current:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: /{slug}/current
+            method: get
+
+    search:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: /{slug}/search
+            method: get
+
+    create-location:
+      handler: bin/not-implemented
+      events:
+          - http:
+              path: locations
+              method: get
+
+    get-location:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: locations/{location-id}
+            method: get
+
+    remove-location:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: locations/{location-id}
+            method: delete
+
+    get-deals:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: locations/{location-id}/deals
+            method: get
+
+    create-deal:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: locations/{location-id}/deals
+            method: get
+
+    remove-deal:
+      handler: bin/not-implemented
+      events:
+        - http:
+            path: locations/{location-id}/deals/{deal-id}
+            method: get

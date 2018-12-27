@@ -1,0 +1,23 @@
+{
+  "name": "deals-api",
+  "version": "0.0.0",
+  "description": "Contain the Serverless framework tooling we use in version control with the repo",
+  "main": "None",
+  "scripts": {
+    "sls": "sls",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/I-Dont-Remember/deals-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/I-Dont-Remember/deals-api/issues"
+  },
+  "homepage": "https://github.com/I-Dont-Remember/deals-api#readme",
+  "dependencies": {
+    "serverless": "^1.35.1"
+  }
+}

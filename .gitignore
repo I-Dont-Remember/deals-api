@@ -2,3 +2,4 @@ bin/
 config.env
 resources
 .serverless/
+node_modules/
