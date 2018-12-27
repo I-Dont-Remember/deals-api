@@ -4,6 +4,20 @@ provider:
   name: aws
   runtime: go1.x
   region: us-east-2
+  environment:
+    API_ENV: prod
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: 
+        # Can either do by specific arn or wildcard ** Should probably not do this so insecurely **
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/*"
 
 package:
   exclude:
@@ -65,26 +79,26 @@ functions:
       handler: bin/not-implemented
       events:
         - http:
-          path: locations/{location-id}
-          method: delete
+            path: locations/{location-id}
+            method: delete
 
     get-deals:
       handler: bin/not-implemented
       events:
         - http:
-          path: locations/{location-id}/deals
-          method: get
+            path: locations/{location-id}/deals
+            method: get
 
     create-deal:
       handler: bin/not-implemented
       events:
         - http:
-          path: locations/{location-id}/deals
-          method: get
+            path: locations/{location-id}/deals
+            method: get
 
     remove-deal:
       handler: bin/not-implemented
       events:
         - http:
-          path: locations/{location-id}/deals/{deal-id}
-          method: get
+            path: locations/{location-id}/deals/{deal-id}
+            method: get
