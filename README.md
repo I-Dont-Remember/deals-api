@@ -1,6 +1,7 @@
 # Deals API
 
-A (hopefully) self contained and well documented repo for Madtown Deals/ Deals On Tap/ or whatever it's called now.
+A (hopefully) self contained and well documented repo for Madtown Deals/ Deals On Tap/ or whatever it's called now. The various functions are stored under `functions` by the description of their operation.  They are all implemented as standalone handlers that take a request & a DB reference, so it would be trivial to set them all up as functions from a single function (in the case we are seeing issues with cold starts, etc), though we would then have to handle our own routing & other stuff that API Gateway currently handles.
+
 
 
 ## Development

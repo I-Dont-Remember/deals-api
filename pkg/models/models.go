@@ -1,5 +1,7 @@
 package models
 
+// TODO: omitempty can be used with json, but do we want it?  How do we want to handle non-existent keys?
+
 // Deal is a json helper
 type Deal struct {
 	ID          string   `json:"id"`
