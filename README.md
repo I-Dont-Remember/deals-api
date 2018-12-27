@@ -10,3 +10,5 @@ To get setup you must have Node & Go setup on your machine.  Once you do, run `n
 To be able to deploy the application, you must have AWS credentials setup with the `aws-cli` tool.
 
 Since there is no serverless-offline plugin for Golang, to check functionality we can use a test suite connected to a locally running DB and come fairly close to how AWS runs, though we have to build the request in the test rather than making actual HTTP calls.  An environment variable is used to differentiate between the different options.`API_ENV` can select from either `local`: for using [localstack](https://github.com/localstack/localstack), `prod`: for deployments on AWS, or `test`: for running tests with the Mock DB.
+
+To test a function, cd to it's directory and run `API_ENV=<test or local> go test`.  To run it with `local` you must have started Localstack and run the create tables script.

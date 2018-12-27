@@ -21,10 +21,23 @@ func Test_getCampuses(t *testing.T) {
 
 	tests := []requestTest{
 		{
-			description: "",
+			description: "200 and finds the correct item",
 			request: events.APIGatewayProxyRequest{
 				Body: "",
-				QueryStringParameters: nil,
+				PathParameters: map[string]string{
+					"slug": "iowa-city",
+				},
+			},
+			expect: "",
+			err:    nil,
+		},
+		{
+			description: "404 on not finding an item",
+			request: events.APIGatewayProxyRequest{
+				Body: "",
+				PathParameters: map[string]string{
+					"slug": "iowa-cityies",
+				},
 			},
 			expect: "",
 			err:    nil,
@@ -36,7 +49,7 @@ func Test_getCampuses(t *testing.T) {
 		// by a test 'setup' function, then the interface functions just
 		// access those
 		dbClient, _ := db.Connect()
-		response, err := getCampuses(test.request, dbClient)
+		response, err := getCampus(test.request, dbClient)
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)

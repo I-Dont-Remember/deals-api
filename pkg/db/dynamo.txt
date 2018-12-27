@@ -1,0 +1,39 @@
+package db
+
+import (
+	"os"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+)
+
+type 
+// CreateConnnection to DynamoDB
+func CreateConnection(region string) (*dynamodb.DynamoDB, error) {
+	localEndpoint := "http://localhost:4569/"
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
+	if os.Getenv("API_ENV") == "local" {
+		sess, err = session.NewSession(
+			&aws.Config{
+				Region:   aws.String(region),
+				Endpoint: aws.String(localEndpoint),
+			})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return dynamodb.New(sess), nil
+}
+
+// TODO: fetch single item from table (good for all single gets)
+
+// use an interface and multiple implementations to handle different ones?
+// Only diff between Local DB & AWS is the very initial session object
+// http://thylong.com/golang/2016/mocking-mongo-in-golang/
+// https://gobyexample.com/interfaces
+// pass each function a type that holds the session? or mock?
+// Don't need to mock the exact Dynamo calls (yet), because we really
+// only care about testing the rest of the code logic for now and having the
+// option to switch databases would be useful

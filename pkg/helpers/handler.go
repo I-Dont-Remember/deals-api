@@ -22,14 +22,18 @@ func Response(data string, statusCode int) (events.APIGatewayProxyResponse, erro
 }
 
 // ErrResponse returns an error in a specified format
-func ErrResponse(msg string, err error, code int) (events.APIGatewayProxyResponse, error) {
+func ErrResponse(msg string, err error, statusCode int) (events.APIGatewayProxyResponse, error) {
 	data := map[string]string{
 		"msg": msg,
-		"err": err.Error(),
 	}
+
+	if err != nil {
+		data["error"] = err.Error()
+	}
+
 	body, _ := json.Marshal(data)
 	return events.APIGatewayProxyResponse{
 		Body:       string(body),
-		StatusCode: code,
+		StatusCode: statusCode,
 	}, err
 }
