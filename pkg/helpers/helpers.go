@@ -3,9 +3,32 @@ package helpers
 // most of this file adapted from https://ewanvalentine.io/serverless-start-ups-in-golang-part-1/
 import (
 	"encoding/json"
+	"log"
+	"os"
+
+	"github.com/I-Dont-Remember/deals-api/pkg/db"
 
 	"github.com/aws/aws-lambda-go/events"
 )
+
+// DbSetupForTest handles checking local vs test mode
+func DbSetupForTest(mockClient db.Mock) db.DB {
+	var dbClient db.DB
+	var err error
+
+	// assume 'test' env unless explicitly 'local'
+	dbClient = mockClient
+	if os.Getenv("API_ENV") == "local" {
+		log.Print("Running tests in local mode")
+		dbClient, err = db.Connect()
+		if err != nil {
+			log.Print("Unable to setup DB client in test")
+			os.Exit(1)
+		}
+	}
+
+	return dbClient
+}
 
 // Response is a wrapper for our http response
 func Response(data string, statusCode int) (events.APIGatewayProxyResponse, error) {

@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/I-Dont-Remember/deals-api/pkg/helpers"
 	"github.com/I-Dont-Remember/deals-api/pkg/models"
 
 	"github.com/I-Dont-Remember/deals-api/pkg/db"
@@ -45,11 +46,12 @@ func Test_createLocation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// TODO: can have data structures in mock that get filled
-		// by a test 'setup' function, then the interface functions just
-		// access those
-		dbClient, _ := db.Connect()
-		response, err := createLocation(test.request, dbClient)
+		mockClient := db.Mock{
+			CreateLocationFunc: func(models.Location) error {
+				return nil
+			},
+		}
+		response, err := createLocation(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)

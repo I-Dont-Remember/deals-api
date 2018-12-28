@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/I-Dont-Remember/deals-api/pkg/db"
+	"github.com/I-Dont-Remember/deals-api/pkg/helpers"
+	"github.com/I-Dont-Remember/deals-api/pkg/models"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/stretchr/testify/assert"
 )
@@ -32,11 +34,12 @@ func Test_getDeals(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// TODO: can have data structures in mock that get filled
-		// by a test 'setup' function, then the interface functions just
-		// access those
-		dbClient, _ := db.Connect()
-		response, err := getDeals(test.request, dbClient)
+		mockClient := db.Mock{
+			GetDealsFunc: func() ([]models.Deal, error) {
+				return []models.Deal{models.Deal{}}, nil
+			},
+		}
+		response, err := getDeals(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)

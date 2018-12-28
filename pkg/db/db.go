@@ -42,22 +42,24 @@ type Dynamo struct {
 	conn *dynamodb.DynamoDB
 }
 
-// TODO: include data structures in these functions
-// that can be edited by unit tests without having
-// to edit this file each time
-
 // Mock mocks DB
-type Mock struct{}
+type Mock struct {
+	GetCampusesFunc    func() ([]models.Campus, error)
+	GetCampusFunc      func(slug string) (models.Campus, error)
+	CreateLocationFunc func(models.Location) error
+	RemoveLocationFunc func(id string) error
+	GetLocationsFunc   func() ([]models.Location, error)
+	GetLocationFunc    func(id string) (models.Location, error)
+	GetDealsFunc       func() ([]models.Deal, error)
+	RemoveDealFunc     func(id string) error
+	CreateDealFunc     func(models.Deal) error
+}
 
-// Connect returns a Dynamo connection; local, remote, or a Mock
+// Connect returns a Dynamo connection; local or remote
 func Connect() (DB, error) {
 	region := "us-east-2"
 	localEndpoint := "http://localhost:4569/"
 	env := os.Getenv("API_ENV")
-
-	if env == "test" {
-		return Mock{}, nil
-	}
 
 	if env != "local" && env != "prod" {
 		// panic since we make important decisions based on env type
@@ -106,7 +108,7 @@ func (db Dynamo) GetCampuses() ([]models.Campus, error) {
 
 // GetCampuses - mocked
 func (m Mock) GetCampuses() ([]models.Campus, error) {
-	return []models.Campus{models.Campus{Slug: "from the mock"}}, nil
+	return m.GetCampusesFunc()
 }
 
 // GetCampus fetches a single campus based on slug
@@ -136,7 +138,7 @@ func (db Dynamo) GetCampus(slug string) (models.Campus, error) {
 
 // GetCampus - mocked
 func (m Mock) GetCampus(slug string) (models.Campus, error) {
-	return models.Campus{}, nil
+	return m.GetCampusFunc(slug)
 }
 
 // GetLocations fetches all locations
@@ -165,7 +167,7 @@ func (db Dynamo) GetLocations() ([]models.Location, error) {
 
 // GetLocations - mocked
 func (m Mock) GetLocations() ([]models.Location, error) {
-	return []models.Location{models.Location{ID: "from the mock"}}, nil
+	return m.GetLocationsFunc()
 }
 
 // GetLocation fetches a single location based on id
@@ -195,7 +197,7 @@ func (db Dynamo) GetLocation(id string) (models.Location, error) {
 
 // GetLocation - mocked
 func (m Mock) GetLocation(id string) (models.Location, error) {
-	return models.Location{}, nil
+	return m.GetLocationFunc(id)
 }
 
 // CreateLocation makes a new Location
@@ -215,8 +217,8 @@ func (db Dynamo) CreateLocation(l models.Location) error {
 }
 
 // CreateLocation - mocked
-func (m Mock) CreateLocation(models.Location) error {
-	return nil
+func (m Mock) CreateLocation(l models.Location) error {
+	return m.CreateLocationFunc(l)
 }
 
 // RemoveLocation removes the location
@@ -239,7 +241,7 @@ func (db Dynamo) RemoveLocation(id string) error {
 
 // RemoveLocation - mocked
 func (m Mock) RemoveLocation(id string) error {
-	return nil
+	return m.RemoveLocationFunc(id)
 }
 
 // GetDeals fetches all deals
@@ -268,7 +270,7 @@ func (db Dynamo) GetDeals() ([]models.Deal, error) {
 
 // GetDeals - mocked
 func (m Mock) GetDeals() ([]models.Deal, error) {
-	return []models.Deal{models.Deal{ID: "from the mock"}}, nil
+	return m.GetDealsFunc()
 }
 
 // CreateDeal makes a new Deal
@@ -289,7 +291,7 @@ func (db Dynamo) CreateDeal(d models.Deal) error {
 
 // CreateDeal - mocked
 func (m Mock) CreateDeal(d models.Deal) error {
-	return nil
+	return m.CreateDealFunc(d)
 }
 
 // RemoveDeal removes the location
@@ -308,5 +310,5 @@ func (db Dynamo) RemoveDeal(id string) error {
 
 // RemoveDeal - mocked
 func (m Mock) RemoveDeal(id string) error {
-	return nil
+	return m.RemoveDealFunc(id)
 }
