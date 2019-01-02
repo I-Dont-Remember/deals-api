@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/I-Dont-Remember/deals-api/pkg/models"
 
 	"github.com/I-Dont-Remember/deals-api/pkg/db"
@@ -12,18 +14,52 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func createLocation(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
-	location := models.Location{}
+type locationBody struct {
+	Name           string `json:"name"`
+	DisplayAddress string `json:"address"`
+}
 
-	// TODO: forces the user to create the json exactly as the object, is that what we want? Shouldn't we handle creating id's and such?
-	err := json.Unmarshal([]byte(request.Body), &location)
+func createLocation(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
+	slug := request.PathParameters["slug"]
+	campus, err := db.GetCampus(slug)
 	if err != nil {
-		return helpers.ErrResponse("Invalid Location item", err, http.StatusBadRequest)
+		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)
+	}
+
+	// if couldn't find campus matching path param
+	if campus.Slug == "" {
+		return helpers.ErrResponse("Bad request", err, http.StatusBadRequest)
+	}
+
+	body := locationBody{}
+	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
+		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)
+	}
+
+	newID, err := uuid.NewV4()
+	if err != nil {
+		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)
+	}
+
+	// TODO: find a better way to do input validaton than writing all our own checks
+	if body.Name == "" {
+		return helpers.ErrResponse("Need a location name", nil, http.StatusBadRequest)
+	}
+
+	location := models.Location{
+		ID:         newID.String(),
+		Name:       body.Name,
+		CampusSlug: slug,
+		Deals:      []string{},
+	}
+
+	if body.DisplayAddress != "" {
+		location.DisplayAddress = body.DisplayAddress
 	}
 
 	err = db.CreateLocation(location)
 	if err != nil {
-		return helpers.ErrResponse("Issue creating location", err, http.StatusFailedDependency)
+		return helpers.ErrResponse("Issue creating location", err, http.StatusInternalServerError)
 	}
 
 	marshalled, err := json.Marshal(location)
@@ -31,7 +67,7 @@ func createLocation(request events.APIGatewayProxyRequest, db db.DB) (events.API
 		return helpers.ErrResponse("Failed marshalling location", err, http.StatusInternalServerError)
 	}
 
-	return helpers.Response(string(marshalled), http.StatusOK)
+	return helpers.Response(string(marshalled), http.StatusCreated)
 }
 
 // Handler processes the DynamoDB query response and returns formatted json body

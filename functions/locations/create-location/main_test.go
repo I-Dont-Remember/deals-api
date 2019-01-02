@@ -15,47 +15,76 @@ import (
 )
 
 type requestTest struct {
-	description string
-	request     events.APIGatewayProxyRequest
-	expect      string
-	err         error
+	description    string
+	bodyMap        map[string]string
+	request        events.APIGatewayProxyRequest
+	expectedStatus int
+	dbMockFunc     func(models.Location) error
+	campusMockFunc func(string) (models.Campus, error)
 }
 
 func Test_createLocation(t *testing.T) {
-	// TODO: shouldn't need this setup, ideally we are only passing a subset of information in the body anyway
-	l := models.Location{
-		ID:   "new-location-id",
-		Name: "string-name",
-	}
-
-	jsonStr, err := json.Marshal(l)
-	if err != nil {
-		log.Print("Failed setting up test")
-		os.Exit(3)
-	}
-
 	tests := []requestTest{
 		{
-			description: "200 and finds the correct item",
+			description: "201 created the Location",
+			bodyMap:     map[string]string{"name": "new-location"},
 			request: events.APIGatewayProxyRequest{
-				Body: string(jsonStr),
+				PathParameters: map[string]string{"slug": "madison-wi"},
 			},
-			expect: "",
-			err:    nil,
+			expectedStatus: 201,
+			dbMockFunc: func(models.Location) error {
+				return nil
+			},
+			campusMockFunc: func(slug string) (models.Campus, error) {
+				return models.Campus{Slug: "madison-wi"}, nil
+			},
+		},
+		{
+			description: "400 if not given a name",
+			bodyMap:     map[string]string{"whatsit": "not-a-name"},
+			request: events.APIGatewayProxyRequest{
+				PathParameters: map[string]string{"slug": "madison-wi"},
+			},
+			expectedStatus: 400,
+			dbMockFunc: func(models.Location) error {
+				return nil
+			},
+			campusMockFunc: func(slug string) (models.Campus, error) {
+				return models.Campus{Slug: "madison-wi"}, nil
+			},
+		},
+		{
+			description: "400 if given an unknown slug",
+			bodyMap:     map[string]string{"whatsit": "not-a-name"},
+			request: events.APIGatewayProxyRequest{
+				PathParameters: map[string]string{"slug": "unknown-location"},
+			},
+			expectedStatus: 400,
+			dbMockFunc: func(models.Location) error {
+				return nil
+			},
+			campusMockFunc: func(slug string) (models.Campus, error) {
+				return models.Campus{}, nil
+			},
 		},
 	}
 
 	for _, test := range tests {
+
+		bytes, err := json.Marshal(test.bodyMap)
+		if err != nil {
+			log.Print("Failed setting up for test")
+			os.Exit(3)
+		}
+		test.request.Body = string(bytes)
+
 		mockClient := db.Mock{
-			CreateLocationFunc: func(models.Location) error {
-				return nil
-			},
+			CreateLocationFunc: test.dbMockFunc,
+			GetCampusFunc:      test.campusMockFunc,
 		}
 		response, err := createLocation(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
-		if err == nil {
-			//log.Print(response)
-		}
-		assert.NotEqual(t, test.expect, response.Body)
+
+		assert.Equal(t, test.expectedStatus, response.StatusCode)
 	}
 }

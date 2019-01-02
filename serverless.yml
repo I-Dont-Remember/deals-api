@@ -62,10 +62,10 @@ functions:
             method: get
 
     create-location:
-      handler: bin/not-implemented
+      handler: bin/create-location
       events:
           - http:
-              path: locations
+              path: /{slug}/locations
               method: get
 
     get-location:
