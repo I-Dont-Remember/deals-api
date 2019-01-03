@@ -3,7 +3,6 @@
 package db
 
 import (
-	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -23,12 +22,16 @@ const (
 
 // DB is a wrapper to allow easy mocking & swapping of persistent storage
 type DB interface {
+	CreateCampus(models.Campus) error
+	RemoveCampus(slug string) error
 	GetCampuses() ([]models.Campus, error)
 	GetCampus(slug string) (models.Campus, error)
+	UpdateCampus(models.Campus) (models.Campus, error)
 	CreateLocation(models.Location) error
 	RemoveLocation(id string) error
 	GetLocations() ([]models.Location, error)
 	GetLocation(id string) (models.Location, error)
+	UpdateLocation(models.Location) (models.Location, error)
 	GetDeals() ([]models.Deal, error)
 	RemoveDeal(id string) error
 	CreateDeal(models.Deal) error
@@ -44,12 +47,16 @@ type Dynamo struct {
 
 // Mock mocks DB
 type Mock struct {
+	CreateCampusFunc   func(models.Campus) error
+	RemoveCampusFunc   func(slug string) error
 	GetCampusesFunc    func() ([]models.Campus, error)
 	GetCampusFunc      func(slug string) (models.Campus, error)
+	UpdateCampusFunc   func(models.Campus) (models.Campus, error)
 	CreateLocationFunc func(models.Location) error
 	RemoveLocationFunc func(id string) error
 	GetLocationsFunc   func() ([]models.Location, error)
 	GetLocationFunc    func(id string) (models.Location, error)
+	UpdateLocationFunc func(models.Location) (models.Location, error)
 	GetDealsFunc       func() ([]models.Deal, error)
 	RemoveDealFunc     func(id string) error
 	CreateDealFunc     func(models.Deal) error
@@ -80,6 +87,47 @@ func Connect() (DB, error) {
 		return nil, err
 	}
 	return &Dynamo{conn: dynamodb.New(sess)}, nil
+}
+
+// CreateCampus makes a new Campus
+func (db Dynamo) CreateCampus(c models.Campus) error {
+	av, err := dynamodbattribute.MarshalMap(c)
+	if err != nil {
+		return err
+	}
+
+	pi := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(campusTable),
+	}
+
+	_, err = db.conn.PutItem(pi)
+	return err
+}
+
+// CreateCampus - mocked
+func (m Mock) CreateCampus(c models.Campus) error {
+	return m.CreateCampusFunc(c)
+}
+
+// RemoveCampus removes the campus
+func (db Dynamo) RemoveCampus(slug string) error {
+	di := &dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(slug),
+			},
+		},
+		TableName: aws.String(campusTable),
+	}
+	// TODO: this returns the same val,err when using a non-existent key, decide if we should throw error on invalid key
+	_, err := db.conn.DeleteItem(di)
+	return err
+}
+
+// RemoveCampus - mocked
+func (m Mock) RemoveCampus(slug string) error {
+	return m.RemoveCampusFunc(slug)
 }
 
 // GetCampuses fetches all campuses
@@ -133,12 +181,27 @@ func (db Dynamo) GetCampus(slug string) (models.Campus, error) {
 		return *c, err
 	}
 
+	// // raise error if that campus didn't exist
+	// if c.Slug == "" {
+	// 	return *c, errors.New("Couldn't find slug -> " + slug)
+	// }
+
 	return *c, nil
 }
 
 // GetCampus - mocked
 func (m Mock) GetCampus(slug string) (models.Campus, error) {
 	return m.GetCampusFunc(slug)
+}
+
+// UpdateCampus updates the campus's data
+func (db Dynamo) UpdateCampus(campus models.Campus) (models.Campus, error) {
+	return campus, db.CreateCampus(campus)
+}
+
+// UpdateCampus - mocked
+func (m Mock) UpdateCampus(campus models.Campus) (models.Campus, error) {
+	return m.UpdateCampusFunc(campus)
 }
 
 // GetLocations fetches all locations
@@ -200,6 +263,18 @@ func (m Mock) GetLocation(id string) (models.Location, error) {
 	return m.GetLocationFunc(id)
 }
 
+// UpdateLocation updates a location's data
+func (db Dynamo) UpdateLocation(location models.Location) (models.Location, error) {
+	// TODO: check if there is a better way
+	// DynamoDB will "update" an item by replacing the same one, giving the same effect
+	return location, db.CreateLocation(location)
+}
+
+// UpdateLocation - mocked
+func (m Mock) UpdateLocation(location models.Location) (models.Location, error) {
+	return m.UpdateLocationFunc(location)
+}
+
 // CreateLocation makes a new Location
 func (db Dynamo) CreateLocation(l models.Location) error {
 	av, err := dynamodbattribute.MarshalMap(l)
@@ -231,11 +306,8 @@ func (db Dynamo) RemoveLocation(id string) error {
 		},
 		TableName: aws.String(locationTable),
 	}
-	log.Print(di)
 	// TODO: this returns the same val,err when using a non-existent key, decide if we should throw error on invalid key
-	val, err := db.conn.DeleteItem(di)
-	log.Print(val)
-	log.Print(err)
+	_, err := db.conn.DeleteItem(di)
 	return err
 }
 
