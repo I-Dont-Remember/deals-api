@@ -2,7 +2,7 @@
 
 **Don't forget [YAGNI](https://www.martinfowler.com/bliki/Yagni.html)**
 
-A (hopefully) self contained and well documented repo for Madtown Deals/ Deals On Tap/ or whatever it's called now. The various functions are stored under `functions` by the description of their operation.  They are all implemented as standalone handlers that take a request & a DB reference, so it would be trivial to set them all up as functions from a single function (in the case we are seeing issues with cold starts, etc), though we would then have to handle our own routing & other stuff that API Gateway currently handles.
+A (hopefully) self contained and well documented repo for Madtown Deals/ Deals On Tap/ or whatever it's called now. The various functions are stored under `functions` by the description of their operation.  They are all implemented as standalone handlers that take a request & a DB reference, so it would be trivial to set them all up as functions from a single function (in the case we are seeing issues with cold starts, etc), though we would then have to handle our own routing & other stuff that API Gateway currently handles.  The functions handling the logic for each request, not just the Lambda stuff, are in multiple files at the top of the model directory such as `locations/createlocation.go` under a single package, such as `location`.  That way it's easy to import them into Lambda handlers, tests, local server handling, and maybe more.
 
 A quick and dirty form of auth is done with `helpers.AuthMiddleware`.  It checks if the `x-dot-auth` header matches the value in the environment variable `API_AUTH`.  This can be thrown away once it becomes time to implement an actual auth provider.
 

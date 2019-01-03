@@ -1,4 +1,4 @@
-package main
+package campuses
 
 import (
 	"log"
@@ -19,7 +19,7 @@ type requestTest struct {
 	err         error
 }
 
-func Test_getCampuses(t *testing.T) {
+func Test_GetOne(t *testing.T) {
 	// Need to mock dynamodb values, since we already can pass the correct apigateway requests
 
 	tests := []requestTest{
@@ -53,7 +53,7 @@ func Test_getCampuses(t *testing.T) {
 				return models.Campus{}, nil
 			},
 		}
-		response, err := getCampus(test.request, helpers.DbSetupForTest(mockClient))
+		response, err := GetOne(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)
