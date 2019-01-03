@@ -1,4 +1,4 @@
-package main
+package locations
 
 import (
 	"log"
@@ -11,22 +11,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type requestTest struct {
+type getoneTest struct {
 	description string
 	request     events.APIGatewayProxyRequest
 	expect      string
 	err         error
 }
 
-func Test_getLocations(t *testing.T) {
+func Test_GetOne(t *testing.T) {
 	// Need to mock dynamodb values, since we already can pass the correct apigateway requests
 
-	tests := []requestTest{
+	tests := []getoneTest{
 		{
 			description: "",
 			request: events.APIGatewayProxyRequest{
-				Body: "",
-				QueryStringParameters: nil,
+				PathParameters: map[string]string{
+					"id": "location-id1",
+				},
 			},
 			expect: "",
 			err:    nil,
@@ -35,11 +36,11 @@ func Test_getLocations(t *testing.T) {
 
 	for _, test := range tests {
 		mockClient := db.Mock{
-			GetLocationsFunc: func() ([]models.Location, error) {
-				return []models.Location{models.Location{}}, nil
+			GetLocationFunc: func(id string) (models.Location, error) {
+				return models.Location{}, nil
 			},
 		}
-		response, err := getLocations(test.request, helpers.DbSetupForTest(mockClient))
+		response, err := GetOne(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)
