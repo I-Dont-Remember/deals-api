@@ -1,4 +1,4 @@
-package main
+package deals
 
 import (
 	"log"
@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type requestTest struct {
-	description string
-	request     events.APIGatewayProxyRequest
-	expect      string
-	err         error
-}
+// type requestTest struct {
+// 	description string
+// 	request     events.APIGatewayProxyRequest
+// 	expect      string
+// 	err         error
+// }
 
-func Test_removeDeal(t *testing.T) {
+func Test_Removel(t *testing.T) {
 	tests := []requestTest{
 		{
 			description: "200 and finds the correct item",
@@ -26,8 +26,7 @@ func Test_removeDeal(t *testing.T) {
 					"id": "new-deal-id",
 				},
 			},
-			expect: "",
-			err:    nil,
+			expectedStatus: 200,
 		},
 	}
 
@@ -37,11 +36,11 @@ func Test_removeDeal(t *testing.T) {
 				return nil
 			},
 		}
-		response, err := removeDeal(test.request, helpers.DbSetupForTest(mockClient))
+		response, err := Remove(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)
 		}
-		assert.NotEqual(t, test.expect, response.Body)
+		assert.NotEqual(t, test.expectedStatus, response.StatusCode)
 	}
 }
