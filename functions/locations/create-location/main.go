@@ -62,6 +62,12 @@ func createLocation(request events.APIGatewayProxyRequest, db db.DB) (events.API
 		return helpers.ErrResponse("Issue creating location", err, http.StatusInternalServerError)
 	}
 
+	campus.Locations = append(campus.Locations, location.ID)
+	_, err = db.UpdateCampus(campus)
+	if err != nil {
+		return helpers.ErrResponse("Failed updating campus", err, http.StatusInternalServerError)
+	}
+
 	marshalled, err := json.Marshal(location)
 	if err != nil {
 		return helpers.ErrResponse("Failed marshalling location", err, http.StatusInternalServerError)

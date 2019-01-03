@@ -90,7 +90,7 @@ functions:
             method: get
 
     create-deal:
-      handler: bin/not-implemented
+      handler: bin/create-deal
       events:
         - http:
             path: locations/{location-id}/deals

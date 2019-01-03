@@ -21,6 +21,7 @@ type requestTest struct {
 	expectedStatus int
 	dbMockFunc     func(models.Location) error
 	campusMockFunc func(string) (models.Campus, error)
+	UpdateMockFunc func(models.Campus) (models.Campus, error)
 }
 
 func Test_createLocation(t *testing.T) {
@@ -38,6 +39,9 @@ func Test_createLocation(t *testing.T) {
 			campusMockFunc: func(slug string) (models.Campus, error) {
 				return models.Campus{Slug: "madison-wi"}, nil
 			},
+			UpdateMockFunc: func(campus models.Campus) (models.Campus, error) {
+				return models.Campus{}, nil
+			},
 		},
 		{
 			description: "400 if not given a name",
@@ -52,6 +56,9 @@ func Test_createLocation(t *testing.T) {
 			campusMockFunc: func(slug string) (models.Campus, error) {
 				return models.Campus{Slug: "madison-wi"}, nil
 			},
+			UpdateMockFunc: func(campus models.Campus) (models.Campus, error) {
+				return models.Campus{}, nil
+			},
 		},
 		{
 			description: "400 if given an unknown slug",
@@ -64,6 +71,9 @@ func Test_createLocation(t *testing.T) {
 				return nil
 			},
 			campusMockFunc: func(slug string) (models.Campus, error) {
+				return models.Campus{}, nil
+			},
+			UpdateMockFunc: func(campus models.Campus) (models.Campus, error) {
 				return models.Campus{}, nil
 			},
 		},
@@ -81,6 +91,7 @@ func Test_createLocation(t *testing.T) {
 		mockClient := db.Mock{
 			CreateLocationFunc: test.dbMockFunc,
 			GetCampusFunc:      test.campusMockFunc,
+			UpdateCampusFunc:   test.UpdateMockFunc,
 		}
 		response, err := createLocation(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
