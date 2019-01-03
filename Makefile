@@ -2,11 +2,27 @@
 
 build:
 	env GOOS=linux go build -ldflags="-s -w" -o bin/not-implemented functions/not-implemented.go
-	env GOOS=linux go build -ldflags="-s -w" -o bin/create-location functions/locations/create-location/main.go
-	env GOOS=linux go build -ldflags="-s -w" -o bin/create-deal functions/deals/create-deal/main.go
+	for dir in functions/deals/*;  do \
+		echo "$$dir"; \
+		name="$$(basename $$dir)"; \
+		echo "Building $$name..."; \
+		env GOOS=linux go build -ldflags="-s -w" -o bin/"$$name" "$$dir"/main.go; \
+		done
+	for dir in functions/locations/*;  do \
+		echo "$$dir"; \
+		name="$$(basename $$dir)"; \
+		echo "Building $$name..."; \
+		env GOOS=linux go build -ldflags="-s -w" -o bin/"$$name" "$$dir"/main.go; \
+		done
+	for dir in functions/campus/*;  do \
+		echo "$$dir"; \
+		name="$$(basename $$dir)"; \
+		echo "Building $$name..."; \
+		env GOOS=linux go build -ldflags="-s -w" -o bin/"$$name" "$$dir"/main.go; \
+		done
 
 test-all:
 	(cd functions && go test ./...)
 
 deploy: build
-	npm run sls -- deploy --verbose
+	if test -z "$$API_AUTH"; then { echo "API_AUTH not set"; exit 1; } else (npm run sls -- deploy --verbose) fi

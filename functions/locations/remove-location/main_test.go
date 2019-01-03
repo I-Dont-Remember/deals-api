@@ -11,23 +11,37 @@ import (
 )
 
 type requestTest struct {
-	description string
-	request     events.APIGatewayProxyRequest
-	expect      string
-	err         error
+	description    string
+	request        events.APIGatewayProxyRequest
+	authValue      string
+	expectedStatus int
+	err            error
 }
 
 func Test_removeLocation(t *testing.T) {
 	tests := []requestTest{
 		{
-			description: "200 and finds the correct item",
+			description: "200 and removes the correct item",
 			request: events.APIGatewayProxyRequest{
+				Headers: map[string]string{"x-dot-auth": "success"},
 				PathParameters: map[string]string{
 					"id": "new-location-id",
 				},
 			},
-			expect: "",
-			err:    nil,
+			authValue:      "success",
+			expectedStatus: 200,
+			err:            nil,
+		},
+		{
+			description: "401 and finds the correct item",
+			request: events.APIGatewayProxyRequest{
+				Headers: map[string]string{"x-dot-auth": "dont-let-me-in"},
+				PathParameters: map[string]string{
+					"id": "new-location-id",
+				},
+			},
+			expectedStatus: 401,
+			err:            nil,
 		},
 	}
 
@@ -42,6 +56,6 @@ func Test_removeLocation(t *testing.T) {
 		if err == nil {
 			//log.Print(response)
 		}
-		assert.NotEqual(t, test.expect, response.Body)
+		assert.Equal(t, test.expectedStatus, response.StatusCode)
 	}
 }

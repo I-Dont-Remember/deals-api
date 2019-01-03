@@ -20,6 +20,10 @@ type locationBody struct {
 }
 
 func createLocation(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
+	if err := helpers.AuthMiddleware(request); err != nil {
+		return helpers.ErrResponse("Failed authenticating", err, http.StatusUnauthorized)
+	}
+
 	slug := request.PathParameters["slug"]
 	campus, err := db.GetCampus(slug)
 	if err != nil {

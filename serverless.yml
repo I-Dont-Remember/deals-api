@@ -6,6 +6,7 @@ provider:
   region: us-east-2
   environment:
     API_ENV: prod
+    API_AUTH: ${env:API_AUTH}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -39,6 +40,10 @@ functions:
         - http:
             path: /{slug}
             method: get
+            request:
+              parameters:
+                paths:
+                  slug: true
 
     get-locations:
       handler: bin/not-implemented
@@ -46,6 +51,10 @@ functions:
         - http:
             path: /{slug}/locations
             method: get
+            request:
+              parameters:
+                paths:
+                  slug: true
 
     get-current:
       handler: bin/not-implemented
@@ -53,6 +62,10 @@ functions:
         - http:
             path: /{slug}/current
             method: get
+            request:
+              parameters:
+                paths:
+                  slug: true
 
     search:
       handler: bin/not-implemented
@@ -60,13 +73,21 @@ functions:
         - http:
             path: /{slug}/search
             method: get
+            request:
+              parameters:
+                paths:
+                  slug: true
 
     create-location:
       handler: bin/create-location
       events:
           - http:
               path: /{slug}/locations
-              method: get
+              method: post
+              request:
+                parameters:
+                  paths:
+                    slug: true
 
     get-location:
       handler: bin/not-implemented
@@ -74,6 +95,10 @@ functions:
         - http:
             path: locations/{location-id}
             method: get
+            request:
+              parameters:
+                paths:
+                  location-id: true
 
     remove-location:
       handler: bin/not-implemented
@@ -81,6 +106,10 @@ functions:
         - http:
             path: locations/{location-id}
             method: delete
+            request:
+              parameters:
+                paths:
+                  location-id: true
 
     get-deals:
       handler: bin/not-implemented
@@ -88,17 +117,30 @@ functions:
         - http:
             path: locations/{location-id}/deals
             method: get
+            request:
+              parameters:
+                paths:
+                  location-id: true
 
     create-deal:
       handler: bin/create-deal
       events:
         - http:
             path: locations/{location-id}/deals
-            method: get
+            method: post
+            request:
+              parameters:
+                paths:
+                  location-id: true
 
     remove-deal:
       handler: bin/not-implemented
       events:
         - http:
-            path: locations/{location-id}/deals/{deal-id}
-            method: get
+            path: /deals/{deal-id}
+            method: delete
+            request:
+              parameters:
+                paths:
+                  deal-id: true
+

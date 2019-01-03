@@ -19,6 +19,7 @@ type requestTest struct {
 	bodyMap        map[string]string
 	request        events.APIGatewayProxyRequest
 	expectedStatus int
+	authValue      string
 	dbMockFunc     func(models.Location) error
 	campusMockFunc func(string) (models.Campus, error)
 	UpdateMockFunc func(models.Campus) (models.Campus, error)
@@ -30,8 +31,10 @@ func Test_createLocation(t *testing.T) {
 			description: "201 created the Location",
 			bodyMap:     map[string]string{"name": "new-location"},
 			request: events.APIGatewayProxyRequest{
+				Headers:        map[string]string{"x-dot-auth": "success"},
 				PathParameters: map[string]string{"slug": "madison-wi"},
 			},
+			authValue:      "success",
 			expectedStatus: 201,
 			dbMockFunc: func(models.Location) error {
 				return nil
@@ -47,8 +50,10 @@ func Test_createLocation(t *testing.T) {
 			description: "400 if not given a name",
 			bodyMap:     map[string]string{"whatsit": "not-a-name"},
 			request: events.APIGatewayProxyRequest{
+				Headers:        map[string]string{"x-dot-auth": "success"},
 				PathParameters: map[string]string{"slug": "madison-wi"},
 			},
+			authValue:      "success",
 			expectedStatus: 400,
 			dbMockFunc: func(models.Location) error {
 				return nil
@@ -64,9 +69,30 @@ func Test_createLocation(t *testing.T) {
 			description: "400 if given an unknown slug",
 			bodyMap:     map[string]string{"whatsit": "not-a-name"},
 			request: events.APIGatewayProxyRequest{
+				Headers:        map[string]string{"x-dot-auth": "success"},
 				PathParameters: map[string]string{"slug": "unknown-location"},
 			},
+			authValue:      "success",
 			expectedStatus: 400,
+			dbMockFunc: func(models.Location) error {
+				return nil
+			},
+			campusMockFunc: func(slug string) (models.Campus, error) {
+				return models.Campus{}, nil
+			},
+			UpdateMockFunc: func(campus models.Campus) (models.Campus, error) {
+				return models.Campus{}, nil
+			},
+		},
+		{
+			description: "401 Prevents unauthorized access",
+			bodyMap:     map[string]string{"whatsit": "not-a-name"},
+			request: events.APIGatewayProxyRequest{
+				Headers:        map[string]string{"x-dot-auth": "dont-let-me-in"},
+				PathParameters: map[string]string{"slug": "unknown-location"},
+			},
+			authValue:      "failure-test",
+			expectedStatus: 401,
 			dbMockFunc: func(models.Location) error {
 				return nil
 			},
@@ -80,6 +106,7 @@ func Test_createLocation(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		os.Setenv("API_AUTH", test.authValue)
 
 		bytes, err := json.Marshal(test.bodyMap)
 		if err != nil {
