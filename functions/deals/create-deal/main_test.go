@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -15,47 +16,75 @@ import (
 )
 
 type requestTest struct {
-	description string
-	request     events.APIGatewayProxyRequest
-	expect      string
-	err         error
+	description      string
+	bodyMap          map[string]interface{}
+	request          events.APIGatewayProxyRequest
+	expectedStatus   int
+	dbMockFunc       func(models.Deal) error
+	locationMockFunc func(string) (models.Location, error)
+	updateMockFunc   func(models.Location) (models.Location, error)
 }
 
 func Test_createDeal(t *testing.T) {
-	// TODO: shouldn't need this setup, ideally we are only passing a subset of information in the body anyway
-	d := models.Deal{
-		ID:          "new-deal-id",
-		Description: "description of deal",
-	}
-
-	jsonStr, err := json.Marshal(d)
-	if err != nil {
-		log.Print("Failed setting up test")
-		os.Exit(3)
-	}
-
 	tests := []requestTest{
 		{
-			description: "200 and finds the correct item",
-			request: events.APIGatewayProxyRequest{
-				Body: string(jsonStr),
+			description: "201 creates a Deal",
+			bodyMap: map[string]interface{}{
+				"description": "a deal description",
+				"all_day":     true,
+				"types":       []string{"Event"},
+				"days":        []string{"Mon", "Wed", "Fri"},
 			},
-			expect: "",
-			err:    nil,
+			request: events.APIGatewayProxyRequest{
+				PathParameters: map[string]string{"location-id": "abcdefghighs"},
+			},
+			expectedStatus: 201,
+			dbMockFunc: func(models.Deal) error {
+				return nil
+			},
+			locationMockFunc: func(id string) (models.Location, error) {
+				return models.Location{ID: "abcddefegegeeg"}, nil
+			},
+			updateMockFunc: func(models.Location) (models.Location, error) {
+				return models.Location{}, nil
+			},
+		},
+		{
+			description: "400 if given invalid id",
+			bodyMap:     map[string]interface{}{},
+			request: events.APIGatewayProxyRequest{
+				PathParameters: map[string]string{"location-id": ""},
+			},
+			expectedStatus: 400,
+			dbMockFunc: func(models.Deal) error {
+				return nil
+			},
+			locationMockFunc: func(id string) (models.Location, error) {
+				return models.Location{ID: ""}, nil
+			},
+			updateMockFunc: func(models.Location) (models.Location, error) {
+				return models.Location{}, nil
+			},
 		},
 	}
 
 	for _, test := range tests {
+		fmt.Println("[*] " + test.description)
+		bytes, err := json.Marshal(test.bodyMap)
+		if err != nil {
+			log.Print("Failed setting up for test")
+			os.Exit(3)
+		}
+		test.request.Body = string(bytes)
+
 		mockClient := db.Mock{
-			CreateDealFunc: func(models.Deal) error {
-				return nil
-			},
+			CreateDealFunc:     test.dbMockFunc,
+			GetLocationFunc:    test.locationMockFunc,
+			UpdateLocationFunc: test.updateMockFunc,
 		}
 		response, err := createDeal(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
-		if err == nil {
-			//log.Print(response)
-		}
-		assert.NotEqual(t, test.expect, response.Body)
+
+		assert.Equal(t, test.expectedStatus, response.StatusCode)
 	}
 }

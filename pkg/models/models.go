@@ -3,6 +3,8 @@ package models
 // TODO: omitempty can be used with json, but do we want it?  How do we want to handle non-existent keys?
 
 // Deal is a json helper
+// Days options: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+// Type options: [Drinks, Food, Event]
 type Deal struct {
 	ID          string   `json:"id"`
 	Description string   `json:"description"`
@@ -11,7 +13,7 @@ type Deal struct {
 	AllDay      bool     `json:"all_day"`
 	StartTime   string   `json:"start_time"`
 	EndTime     string   `json:"end_time"`
-	Type        []string `json:"type"`
+	Types       []string `json:"types"`
 }
 
 // Location is a json helper
