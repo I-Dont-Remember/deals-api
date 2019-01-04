@@ -28,7 +28,7 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 	slug := request.PathParameters["slug"]
 	campus, err := db.GetCampus(slug)
 	if err != nil {
-		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)
+		return helpers.ErrResponse("Error getting campus", err, http.StatusInternalServerError)
 	}
 
 	// if couldn't find campus matching path param
@@ -38,7 +38,7 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 
 	body := locationBody{}
 	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
-		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)
+		return helpers.ErrResponse("Error getting body", err, http.StatusInternalServerError)
 	}
 
 	newID, err := uuid.NewV4()

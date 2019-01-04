@@ -22,7 +22,7 @@ An environment variable is used to differentiate between the different options.`
 
 Since there is no serverless-offline plugin for Go, to check functionality we can use a locally running DynamoDB and come fairly close to how AWS runs.  By keeping most of the logic inside packages, it is easy to import and pass requests to the logic functions. `go run local.go` connects while serving the API on `localhost`.  It uses the Echo web framework and a function that massages the request/response objects from Echo to match the inputs and outputs of the Lambda handler functions.  While convenient for testing, it does need a vigilant watch to make sure it matches the expected url paths & other things that API Gateway/Serverless handle.
 
-At some point this can be extended to write fairly decent integration tests, but for now it's effective for manual testing.  One of the benefits of it being a little more difficult to test locally than some random script is that it pushes TDD (Test Driven Development), because running `go test` is significantly faster than the using `local` or `prod` environments.
+At some point this can be extended to write fairly decent integration tests, but for now it's effective for manual testing.  One of the benefits of it being a little more difficult to test locally than some random script is that it pushes TDD (Test Driven Development), because running `go test` is significantly faster than the using `local` or `prod` environments.  Another option for slightly less manual testing is to use the `local` env with `go test`, which lets you run the tests against Localstack but it does require more initial setup because you have to get the DB into the correct state you're expecting for each test.
 
 ## Testing
 
