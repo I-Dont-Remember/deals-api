@@ -1,29 +1,27 @@
-package main
+package locations
 
 import (
-	"errors"
 	"log"
 	"testing"
 
-	"github.com/I-Dont-Remember/deals-api/pkg/helpers"
-
 	"github.com/I-Dont-Remember/deals-api/pkg/db"
+	"github.com/I-Dont-Remember/deals-api/pkg/helpers"
 	"github.com/I-Dont-Remember/deals-api/pkg/models"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/stretchr/testify/assert"
 )
 
-type requestTest struct {
+type getTest struct {
 	description string
 	request     events.APIGatewayProxyRequest
 	expect      string
 	err         error
 }
 
-func Test_getCampuses(t *testing.T) {
+func Test_Get(t *testing.T) {
 	// Need to mock dynamodb values, since we already can pass the correct apigateway requests
 
-	tests := []requestTest{
+	tests := []getTest{
 		{
 			description: "",
 			request: events.APIGatewayProxyRequest{
@@ -37,12 +35,11 @@ func Test_getCampuses(t *testing.T) {
 
 	for _, test := range tests {
 		mockClient := db.Mock{
-			GetCampusesFunc: func() ([]models.Campus, error) {
-				return []models.Campus{models.Campus{Slug: "hoopy-scoopy"}}, errors.New("ruh roh issue")
+			GetLocationsFunc: func() ([]models.Location, error) {
+				return []models.Location{models.Location{}}, nil
 			},
 		}
-
-		response, err := getCampuses(test.request, helpers.DbSetupForTest(mockClient))
+		response, err := Get(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)

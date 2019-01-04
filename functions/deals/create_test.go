@@ -1,4 +1,4 @@
-package main
+package deals
 
 import (
 	"encoding/json"
@@ -25,7 +25,7 @@ type requestTest struct {
 	updateMockFunc   func(models.Location) (models.Location, error)
 }
 
-func Test_createDeal(t *testing.T) {
+func Test_Createl(t *testing.T) {
 	tests := []requestTest{
 		{
 			description: "201 creates a Deal",
@@ -82,7 +82,7 @@ func Test_createDeal(t *testing.T) {
 			GetLocationFunc:    test.locationMockFunc,
 			UpdateLocationFunc: test.updateMockFunc,
 		}
-		response, err := createDeal(test.request, helpers.DbSetupForTest(mockClient))
+		response, err := Create(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 
 		assert.Equal(t, test.expectedStatus, response.StatusCode)

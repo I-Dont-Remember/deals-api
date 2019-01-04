@@ -1,4 +1,4 @@
-package main
+package locations
 
 import (
 	"log"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type requestTest struct {
+type removeTest struct {
 	description    string
 	request        events.APIGatewayProxyRequest
 	authValue      string
@@ -18,8 +18,8 @@ type requestTest struct {
 	err            error
 }
 
-func Test_removeLocation(t *testing.T) {
-	tests := []requestTest{
+func Test_Remove(t *testing.T) {
+	tests := []removeTest{
 		{
 			description: "200 and removes the correct item",
 			request: events.APIGatewayProxyRequest{
@@ -51,7 +51,7 @@ func Test_removeLocation(t *testing.T) {
 				return nil
 			},
 		}
-		response, err := removeLocation(test.request, helpers.DbSetupForTest(mockClient))
+		response, err := Remove(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)

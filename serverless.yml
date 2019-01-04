@@ -38,7 +38,7 @@ functions:
       handler: bin/not-implemented
       events:
         - http:
-            path: /{slug}
+            path: campuses/{slug}
             method: get
             request:
               parameters:
@@ -49,7 +49,7 @@ functions:
       handler: bin/not-implemented
       events:
         - http:
-            path: /{slug}/locations
+            path: campuses/{slug}/locations
             method: get
             request:
               parameters:
@@ -82,7 +82,7 @@ functions:
       handler: bin/create-location
       events:
           - http:
-              path: /{slug}/locations
+              path: campuses/{slug}/locations
               method: post
               request:
                 parameters:

@@ -1,4 +1,4 @@
-package main
+package locations
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type requestTest struct {
+type createTest struct {
 	description    string
 	bodyMap        map[string]string
 	request        events.APIGatewayProxyRequest
@@ -25,8 +25,8 @@ type requestTest struct {
 	UpdateMockFunc func(models.Campus) (models.Campus, error)
 }
 
-func Test_createLocation(t *testing.T) {
-	tests := []requestTest{
+func Test_Create(t *testing.T) {
+	tests := []createTest{
 		{
 			description: "201 created the Location",
 			bodyMap:     map[string]string{"name": "new-location"},
@@ -120,7 +120,7 @@ func Test_createLocation(t *testing.T) {
 			GetCampusFunc:      test.campusMockFunc,
 			UpdateCampusFunc:   test.UpdateMockFunc,
 		}
-		response, err := createLocation(test.request, helpers.DbSetupForTest(mockClient))
+		response, err := Create(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 
 		assert.Equal(t, test.expectedStatus, response.StatusCode)

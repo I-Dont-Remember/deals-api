@@ -11,7 +11,8 @@ import (
 func AuthMiddleware(request events.APIGatewayProxyRequest) error {
 	headers := request.Headers
 
-	val, ok := headers["x-dot-auth"]
+	// log.Print(headers)
+	val, ok := headers["X-Dot-Auth"]
 	if ok {
 		if val == os.Getenv("API_AUTH") {
 			return nil

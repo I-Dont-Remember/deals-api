@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/I-Dont-Remember/deals-api/functions/deals"
+	"github.com/I-Dont-Remember/deals-api/functions/campuses"
 	"github.com/I-Dont-Remember/deals-api/pkg/db"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -11,7 +11,7 @@ import (
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// TODO: handle errors and possibly extract this code with function pointers or something - look at net/http handlers setup ----> golden ticket
 	dbClient, _ := db.Connect()
-	return deals.Create(request, dbClient)
+	return campuses.GetOne(request, dbClient)
 }
 
 func main() {

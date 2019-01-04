@@ -1,4 +1,4 @@
-package main
+package deals
 
 import (
 	"log"
@@ -11,14 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type requestTest struct {
-	description string
-	request     events.APIGatewayProxyRequest
-	expect      string
-	err         error
-}
+// type requestTest struct {
+// 	description string
+// 	request     events.APIGatewayProxyRequest
+// 	expect      string
+// 	err         error
+// }
 
-func Test_getDeals(t *testing.T) {
+func Test_Get(t *testing.T) {
 	// Need to mock dynamodb values, since we already can pass the correct apigateway requests
 
 	tests := []requestTest{
@@ -28,8 +28,7 @@ func Test_getDeals(t *testing.T) {
 				Body: "",
 				QueryStringParameters: nil,
 			},
-			expect: "",
-			err:    nil,
+			expectedStatus: 200,
 		},
 	}
 
@@ -39,11 +38,11 @@ func Test_getDeals(t *testing.T) {
 				return []models.Deal{models.Deal{}}, nil
 			},
 		}
-		response, err := getDeals(test.request, helpers.DbSetupForTest(mockClient))
+		response, err := Get(test.request, helpers.DbSetupForTest(mockClient))
 		log.Print(response)
 		if err == nil {
 			//log.Print(response)
 		}
-		assert.NotEqual(t, test.expect, response.Body)
+		assert.NotEqual(t, test.expectedStatus, response.StatusCode)
 	}
 }
