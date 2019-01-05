@@ -4,6 +4,7 @@
   "description": "Contain the Serverless framework tooling we use in version control with the repo",
   "main": "None",
   "scripts": {
+    "start": "nodemon local.go",
     "sls": "sls",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,5 +20,8 @@
   "homepage": "https://github.com/I-Dont-Remember/deals-api#readme",
   "dependencies": {
     "serverless": "^1.35.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.9"
   }
 }
