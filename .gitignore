@@ -5,3 +5,5 @@ resources
 node_modules/
 **.json
 
+# ignore the ApiGateway generated sdk
+js-sdk/
