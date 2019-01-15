@@ -28,14 +28,14 @@ package:
 
 functions:
     get-campuses:
-      handler: bin/not-implemented
+      handler: bin/get-campuses
       events:
         - http:
             path: campuses
             method: get
 
     get-campus:
-      handler: bin/not-implemented
+      handler: bin/get-campus
       events:
         - http:
             path: campuses/{slug}
@@ -46,7 +46,7 @@ functions:
                   slug: true
 
     get-locations:
-      handler: bin/not-implemented
+      handler: bin/get-locations
       events:
         - http:
             path: campuses/{slug}/locations
@@ -90,7 +90,7 @@ functions:
                     slug: true
 
     get-location:
-      handler: bin/not-implemented
+      handler: bin/get-location
       events:
         - http:
             path: locations/{location-id}
@@ -101,7 +101,7 @@ functions:
                   location-id: true
 
     remove-location:
-      handler: bin/not-implemented
+      handler: bin/remove-location
       events:
         - http:
             path: locations/{location-id}
@@ -112,7 +112,7 @@ functions:
                   location-id: true
 
     get-deals:
-      handler: bin/not-implemented
+      handler: bin/get-deals
       events:
         - http:
             path: locations/{location-id}/deals
@@ -134,7 +134,7 @@ functions:
                   location-id: true
 
     remove-deal:
-      handler: bin/not-implemented
+      handler: bin/remove-deal
       events:
         - http:
             path: /deals/{deal-id}

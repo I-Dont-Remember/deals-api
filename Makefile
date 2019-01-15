@@ -2,19 +2,19 @@
 
 build:
 	env GOOS=linux go build -ldflags="-s -w" -o bin/not-implemented functions/not-implemented.go
-	for dir in functions/deals/*;  do \
+	for dir in functions/deals/*/;  do \
 		echo "$$dir"; \
 		name="$$(basename $$dir)"; \
 		echo "Building $$name..."; \
 		env GOOS=linux go build -ldflags="-s -w" -o bin/"$$name" "$$dir"/main.go; \
 		done
-	for dir in functions/locations/*;  do \
+	for dir in functions/locations/*/;  do \
 		echo "$$dir"; \
 		name="$$(basename $$dir)"; \
 		echo "Building $$name..."; \
 		env GOOS=linux go build -ldflags="-s -w" -o bin/"$$name" "$$dir"/main.go; \
 		done
-	for dir in functions/campus/*;  do \
+	for dir in functions/campuses/*/;  do \
 		echo "$$dir"; \
 		name="$$(basename $$dir)"; \
 		echo "Building $$name..."; \
