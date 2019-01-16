@@ -25,6 +25,10 @@ type Location struct {
 	Latitude       string   `json:"latitude"`
 	Longitude      string   `json:"longitude"`
 	ImageLink      string   `json:"image_link"`
+	PhoneNumber    string   `json:"phone_number"`
+	Website        string   `json:"website"`
+	YelpLink       string   `json:"yelp_link"`
+	Hours          []string `json:"hours"`
 	Deals          []string `json:"deals"`
 }
 
