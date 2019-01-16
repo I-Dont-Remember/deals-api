@@ -7,8 +7,14 @@ import (
 
 	"github.com/I-Dont-Remember/deals-api/pkg/db"
 	"github.com/I-Dont-Remember/deals-api/pkg/helpers"
+	"github.com/I-Dont-Remember/deals-api/pkg/models"
 	"github.com/aws/aws-lambda-go/events"
 )
+
+type campusBody struct {
+	Slug        string `json:"slug"`
+	DisplayName string `json:"display_name"`
+}
 
 // Get fetches all campuses from the DB wrapper & returns a http response
 func Get(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
@@ -45,4 +51,46 @@ func GetOne(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 	}
 
 	return helpers.Response(string(marshalled), http.StatusOK)
+}
+
+// Create creates a campus
+func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
+	if err := helpers.AuthMiddleware(request); err != nil {
+		return helpers.ErrResponse("Failed authenticating", err, http.StatusUnauthorized)
+	}
+
+	body := campusBody{}
+	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
+		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)
+	}
+
+	if body.Slug == "" {
+		return helpers.Response("no slug", http.StatusBadRequest)
+	}
+
+	// check if slug already exists
+	campus, err := db.GetCampus(body.Slug)
+	if err == nil {
+		return helpers.Response("slug exists", http.StatusConflict)
+	}
+
+	// TODO: make sure error is related to the slug being missing not other errors, this will probably be roped into better error handling all around
+
+	campus = models.Campus{
+		Slug:        body.Slug,
+		DisplayName: body.DisplayName,
+		Locations:   []string{},
+	}
+
+	err = db.CreateCampus(campus)
+	if err != nil {
+		return helpers.ErrResponse("Issue creating campus", err, http.StatusInternalServerError)
+	}
+
+	marshalled, err := json.Marshal(campus)
+	if err != nil {
+		return helpers.ErrResponse("Failed marshalling campus", err, http.StatusInternalServerError)
+	}
+
+	return helpers.Response(string(marshalled), http.StatusCreated)
 }

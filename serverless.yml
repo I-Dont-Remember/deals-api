@@ -27,6 +27,13 @@ package:
     - ./bin/**
 
 functions:
+    create-campus:
+      handler: bin/create-campus
+      events:
+        - http:
+            path: campuses
+            method: post
+
     get-campuses:
       handler: bin/get-campuses
       events:

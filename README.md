@@ -28,6 +28,23 @@ At some point this can be extended to write fairly decent integration tests, but
 
 As useful things get created for development, they will live in `tools/`.  The README in that directory has a wishlist of possible options if we have extra time.
 
+### Structure
+
+Each model has a directory in `functions/` which is also their Go package.  Inside there are tests for each function in the package, and each function is the business logic of an API call.  The directories inside, labeled with their operations, are the actual Lambda Handlers which make it easy for the Makefile to run through and package up all the functions for deployment.  This structure makes it simple to plugin the business logic elsewhere, as was done to run the API locally.
+
+### Adding A New Endpoint
+
+A rough primer on what steps are necessary to add a new endpoint to the basic CRUD version of this API.  This should become less complicated at some point - fingers crossed.
+
+* Create the necessary function in the main file e.g. `functions/locations/locations.go` to add `Example()` to locations
+* (If needed) extend the interfaces in `pkg/db/`
+* Make a test file for it in the main directory e.g. `functions/locations/`
+    * current best practices are based off of `functions/locations/create_test.go`, follow that
+* Make the Lambda handler for it e.g. `functions/locations/example/main.go`
+* Add the endpoint to the `serverless.yml`
+* Add the endpoint to the local API, `local.go`
+
+
 ## Testing
 
 To test a package or function, cd to it's directory and run `go test`.

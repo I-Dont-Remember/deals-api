@@ -82,6 +82,7 @@ func main() {
 	// !! These should all match exactly with the serverless.yml
 	e.GET("/campuses", adjust(campuses.Get))
 	e.GET("/campuses/:slug", adjust(campuses.GetOne))
+	e.POST("/campuses", adjust(campuses.Create))
 
 	e.GET("/campuses/:slug/locations", adjust(locations.Get))
 	e.GET("/locations/:location-id", adjust(locations.GetOne))
