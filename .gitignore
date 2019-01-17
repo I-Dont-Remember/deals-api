@@ -4,6 +4,7 @@ resources
 .serverless/
 node_modules/
 **.json
+**.toml
 
 # ignore the ApiGateway generated sdk
 js-sdk/

@@ -31,7 +31,7 @@ func (c *Client) post(path string, data map[string]interface{}) ([]byte, error) 
 	if err != nil {
 		return []byte{}, err
 	}
-	fmt.Println("Making API call to " + url)
+	fmt.Println("[*] making API call to " + url)
 	body := bytes.NewBuffer(str)
 	request, _ := http.NewRequest("POST", url, body)
 	request.Header.Set("Content-Type", "application/json")

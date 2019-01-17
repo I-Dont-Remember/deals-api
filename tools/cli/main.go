@@ -5,20 +5,27 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/BurntSushi/toml"
+	"github.com/I-Dont-Remember/deals-api/tools/cli/deals"
+
 	"github.com/brianvoe/gofakeit"
 
-	"github.com/I-Dont-Remember/deals-api/tools/cli/deals"
 	"github.com/tucnak/climax"
 )
 
+var (
+	basePath = "http://localhost:4500"
+)
+
 func main() {
-	d := climax.New("d")
-	d.Brief = "CLI for tasks for Deals On Tap"
-	d.Version = "v0.0.0"
+	cli := climax.New("cli")
+	cli.Brief = "CLI for tasks for Deals On Tap"
+	cli.Version = "v0.0.0"
 
 	generateCmd := climax.Command{
 		Name:  "generate",
@@ -52,8 +59,42 @@ func main() {
 		Handle: generateData,
 	}
 
-	d.AddCommand(generateCmd)
-	d.Run()
+	uploadCmd := climax.Command{
+		Name:  "upload",
+		Brief: "Upload deals and locations from files or pass a directory",
+		Usage: "go run main.go upload -c uw-madison [ -b http://api.com/api/  ] [ -d directory/ | ./file1.toml ./file2.toml ]",
+		Flags: []climax.Flag{
+			{
+				Name:     "campusSlug",
+				Short:    "c",
+				Variable: true,
+				Usage:    "-c uw-madison",
+			},
+			{
+				Name:     "directory",
+				Short:    "d",
+				Variable: true,
+				Usage:    "-d ./directory/",
+			},
+			{
+				Name:     "basePath",
+				Short:    "b",
+				Variable: true,
+				Usage:    "-b http://localhost:7895",
+			},
+		},
+		Handle: upload,
+	}
+
+	// createCmd := climax.Command{
+	// 	Name:  "create",
+	// 	Brief: "Create one of the models",
+	// 	Usage: "",
+	// }
+
+	cli.AddCommand(generateCmd)
+	cli.AddCommand(uploadCmd)
+	cli.Run()
 }
 
 func check(e error, msg string) {
@@ -152,10 +193,10 @@ func getRandomTypes() []string {
 	return []string{options[num-1]}
 }
 
+/// generate a big pile of fake data for using in the local DB
 func generate(numCampuses, maxLocations, minLocations, maxDeals, minDeals int) {
 	rand.Seed(time.Now().UnixNano())
 	// test 1 function MVP just to make progress cuz all cli things suck
-	basePath := "http://localhost:4500"
 
 	client := deals.New(basePath)
 
@@ -202,4 +243,118 @@ func generate(numCampuses, maxLocations, minLocations, maxDeals, minDeals int) {
 	}
 
 	fmt.Printf("Created %d campuses\n", numCampuses)
+}
+
+// used to upload the toml files of locations and their deals
+func upload(ctx climax.Context) int {
+	campusSlug, ok := ctx.Get("campusSlug")
+	if !ok {
+		ctx.Log("need to know which campus to upload to")
+		os.Exit(1)
+	}
+
+	newBasePath, ok := ctx.Get("basePath")
+	if !ok {
+		newBasePath = ""
+	}
+
+	dir, ok := ctx.Get("directory")
+
+	if ok {
+		// get all .toml files from directory
+		absPath, err := filepath.Abs(dir)
+		if err != nil {
+			ctx.Log("couldn't figure out correct path with " + dir)
+			os.Exit(1)
+		}
+
+		err = filepath.Walk(absPath, func(path string, info os.FileInfo, err error) error {
+			fileErr := handleFile(campusSlug, path, newBasePath)
+			return fileErr
+
+		})
+		if err != nil {
+			ctx.Log("error while walking the directory " + err.Error())
+			os.Exit(1)
+		}
+	} else {
+		files := ctx.Args
+
+		for _, f := range files {
+			handleFile(campusSlug, f, newBasePath)
+		}
+	}
+
+	return 0
+}
+
+// types of toml unmarshaling
+// !! this needs to stay  up to date with the fields in models
+type locationInfo struct {
+	Name           string
+	DisplayAddress string `toml:"addr"`
+	Latitude       string
+	Longitude      string
+	ImageLink      string
+	PhoneNumber    string
+	Website        string
+	YelpLink       string
+	Deals          []dealInfo `toml:"deal"`
+}
+
+type dealInfo struct {
+	Desc   string
+	Days   []string
+	AllDay bool
+	Start  string
+	End    string
+	Types  []string
+}
+
+func handleFile(campusSlug, path, newBasePath string) error {
+	if filepath.Ext(strings.TrimSpace(path)) == ".toml" {
+		fmt.Println("[*] handling " + path)
+	} else {
+		fmt.Println("[!] skipping " + path)
+	}
+
+	contents := &locationInfo{}
+	ret, err := toml.DecodeFile(path, &contents)
+	if err != nil {
+		fmt.Println("Err decoding " + err.Error())
+		return nil
+	}
+
+	if len(ret.Undecoded()) != 0 {
+		fmt.Println("[!] unable to decode these correctly", ret.Undecoded())
+	}
+
+	fmt.Println(contents)
+
+	if newBasePath != "" {
+		basePath = newBasePath
+	}
+	client := deals.New(basePath)
+	// create a location from information
+	location, err := client.CreateLocation(campusSlug, contents.Name,
+		contents.DisplayAddress,
+		contents.Latitude,
+		contents.Longitude,
+		contents.ImageLink,
+		contents.PhoneNumber,
+		contents.Website,
+		contents.YelpLink)
+	check(err, "failed creating location from toml")
+
+	for _, d := range contents.Deals {
+		_, err := client.CreateDeal(location.ID, d.Desc,
+			d.Start,
+			d.End,
+			d.Days,
+			d.Types,
+			d.AllDay)
+		check(err, "failed creating deals from toml "+d.Desc)
+	}
+
+	return nil
 }
