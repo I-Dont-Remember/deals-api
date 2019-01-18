@@ -84,6 +84,8 @@ func main() {
 		Format: "${method} ${uri} status:${status} latency:${latency_human} out:${bytes_out} bytes X-Dot-Auth:${header:X-Dot-Auth}\n",
 	}))
 
+	e.Use(middleware.CORS())
+
 	// !! These should all match exactly with the serverless.yml
 	e.GET("/campuses", adjust(campuses.Get))
 	e.GET("/campuses/:slug", adjust(campuses.GetOne))
