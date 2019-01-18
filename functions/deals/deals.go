@@ -37,7 +37,7 @@ func Get(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProx
 
 // Remove removes a deal
 func Remove(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
-	id := request.PathParameters["id"]
+	id := request.PathParameters["deal-id"]
 	err := db.RemoveDeal(id)
 	if err != nil {
 		return helpers.ErrResponse("Issue removing deal", err, http.StatusFailedDependency)

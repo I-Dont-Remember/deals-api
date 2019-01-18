@@ -18,8 +18,9 @@ import (
 	"github.com/tucnak/climax"
 )
 
+// use lvh instead of localhost to possibly trick any CORS issues out during local development
 var (
-	basePath = "http://localhost:4500"
+	basePath = "http://lvh.me:4500"
 )
 
 func main() {

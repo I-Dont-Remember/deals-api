@@ -85,7 +85,8 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 
 // GetOne fetches a single location
 func GetOne(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
-	id := request.PathParameters["id"]
+	id := request.PathParameters["location-id"]
+	log.Println("location GetOne id: " + id)
 	location, err := db.GetLocation(id)
 	if err != nil {
 		return helpers.ErrResponse("Issue getting location", err, http.StatusFailedDependency)
@@ -122,7 +123,7 @@ func Get(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProx
 
 // Remove gets rid of location
 func Remove(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
-	id := request.PathParameters["id"]
+	id := request.PathParameters["location-id"]
 	err := db.RemoveLocation(id)
 	if err != nil {
 		return helpers.ErrResponse("Issue removing location", err, http.StatusFailedDependency)
