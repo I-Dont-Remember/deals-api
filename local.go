@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -56,6 +57,10 @@ func adjust(fn func(events.APIGatewayProxyRequest, db.DB) (events.APIGatewayProx
 			Body: string(body),
 		}
 		proxyResponse, _ := fn(request, dbClient)
+
+		if proxyResponse.StatusCode > 300 {
+			fmt.Println("   [!] ", proxyResponse.Body)
+		}
 
 		// TODO: check this is actually doing what we thing it is
 		for k, v := range proxyResponse.Headers {

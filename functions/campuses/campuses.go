@@ -70,7 +70,11 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 
 	// check if slug already exists
 	campus, err := db.GetCampus(body.Slug)
-	if err == nil {
+	if err != nil {
+		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)
+	}
+
+	if campus.Slug != "" {
 		return helpers.Response("slug exists", http.StatusConflict)
 	}
 

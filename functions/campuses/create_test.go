@@ -1,7 +1,6 @@
 package campuses
 
 import (
-	"errors"
 	"log"
 	"testing"
 
@@ -18,9 +17,8 @@ func Test_Create(t *testing.T) {
 	rt := helpers.NewRequestTest()
 	rt.Description = "201 created the Campus"
 	rt.BodyMap = map[string]string{"slug": "uw-madison", "display_name": "University of Wisconsin-Madison"}
-	// TODO: fix up error handling with types or something, as we should have a specific way of inserting certain errors
 	rt.MockClient.GetCampusFunc = func(slug string) (models.Campus, error) {
-		return models.Campus{}, errors.New("doesn't exist")
+		return models.Campus{}, nil
 	}
 	rt.ExpectedStatus = 201
 	tests = append(tests, rt)
@@ -31,10 +29,13 @@ func Test_Create(t *testing.T) {
 	rt.ExpectedStatus = 400
 	tests = append(tests, rt)
 
-	// slug already exists; so the getCampus function would return nil
+	// slug already exists
 	rt = helpers.NewRequestTest()
 	rt.Description = "409 if slug already exists"
 	rt.BodyMap = map[string]string{"slug": "i-already-exist"}
+	rt.MockClient.GetCampusFunc = func(slug string) (models.Campus, error) {
+		return models.Campus{Slug: "i-already-exist"}, nil
+	}
 	rt.ExpectedStatus = 409
 	tests = append(tests, rt)
 

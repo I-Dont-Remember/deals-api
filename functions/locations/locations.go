@@ -31,6 +31,8 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 		return helpers.ErrResponse("Error getting campus", err, http.StatusInternalServerError)
 	}
 
+	// TODO: should have some way to check that we aren't doubling up a location
+
 	// if couldn't find campus matching path param
 	if campus.Slug == "" {
 		return helpers.ErrResponse("Bad request", err, http.StatusBadRequest)
