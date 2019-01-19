@@ -109,10 +109,43 @@ func GetOne(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 func Get(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayProxyResponse, error) {
 	locations, err := db.GetLocations()
 	if err != nil {
-		return helpers.ErrResponse("Issue getting locations", err, http.StatusFailedDependency)
+		return helpers.ErrResponse("Issue getting locations", err, http.StatusInternalServerError)
 	}
 
-	marshalled, err := json.Marshal(locations)
+	expand, ok := request.QueryStringParameters["expand"]
+
+	var marshalled []byte
+	// TODO: find a better way than trading stucts for handling data expansion
+	if ok && expand == "deals" {
+		expanded := []models.ExpandedLocation{}
+		for _, l := range locations {
+			dealIDs := l.Deals
+			deals, err := db.BatchGetDeals(dealIDs)
+			if err != nil {
+				return helpers.ErrResponse("Issue getting locations", err, http.StatusInternalServerError)
+			}
+
+			e := models.ExpandedLocation{
+				ID:             l.ID,
+				Name:           l.Name,
+				CampusSlug:     l.CampusSlug,
+				DisplayAddress: l.DisplayAddress,
+				Latitude:       l.Latitude,
+				Longitude:      l.Longitude,
+				ImageLink:      l.ImageLink,
+				PhoneNumber:    l.PhoneNumber,
+				Website:        l.Website,
+				YelpLink:       l.YelpLink,
+				Hours:          l.Hours,
+				Deals:          deals,
+			}
+			expanded = append(expanded, e)
+		}
+		marshalled, err = json.Marshal(expanded)
+	} else {
+		marshalled, err = json.Marshal(locations)
+	}
+
 	if err != nil {
 		log.Print("Error marshalling locations...")
 		return helpers.ErrResponse("Failed marshalling locations", err, http.StatusInternalServerError)

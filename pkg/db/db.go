@@ -33,6 +33,7 @@ type DB interface {
 	GetLocation(id string) (models.Location, error)
 	UpdateLocation(models.Location) (models.Location, error)
 	GetDeals() ([]models.Deal, error)
+	BatchGetDeals(ids []string) ([]models.Deal, error)
 	RemoveDeal(id string) error
 	CreateDeal(models.Deal) error
 }
@@ -58,6 +59,7 @@ type Mock struct {
 	GetLocationFunc    func(id string) (models.Location, error)
 	UpdateLocationFunc func(models.Location) (models.Location, error)
 	GetDealsFunc       func() ([]models.Deal, error)
+	BatchGetDealsFunc  func(ids []string) ([]models.Deal, error)
 	RemoveDealFunc     func(id string) error
 	CreateDealFunc     func(models.Deal) error
 }
@@ -343,6 +345,54 @@ func (db Dynamo) GetDeals() ([]models.Deal, error) {
 // GetDeals - mocked
 func (m Mock) GetDeals() ([]models.Deal, error) {
 	return m.GetDealsFunc()
+}
+
+// BatchGetDeals get deals based on list of ids
+func (db Dynamo) BatchGetDeals(ids []string) ([]models.Deal, error) {
+	keys := []map[string]*dynamodb.AttributeValue{}
+	for _, id := range ids {
+		key := map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(id),
+			},
+		}
+		keys = append(keys, key)
+	}
+
+	requestItems := map[string]*dynamodb.KeysAndAttributes{}
+	requestItems[dealTable] = &dynamodb.KeysAndAttributes{Keys: keys}
+
+	input := &dynamodb.BatchGetItemInput{
+		RequestItems: requestItems,
+	}
+	output, err := db.conn.BatchGetItem(input)
+	if err != nil {
+		return nil, err
+	}
+
+	dynamoDeals, ok := output.Responses[dealTable]
+	if !ok {
+		// didn't have our table in response; is this an error?
+		return []models.Deal{}, nil
+	}
+
+	var deals []models.Deal
+
+	for _, d := range dynamoDeals {
+		deal := models.Deal{}
+		err = dynamodbattribute.UnmarshalMap(d, &deal)
+		if err != nil {
+			return []models.Deal{}, err
+		}
+		deals = append(deals, deal)
+	}
+
+	return deals, nil
+}
+
+// BatchGetDeals - mocked
+func (m Mock) BatchGetDeals(ids []string) ([]models.Deal, error) {
+	return m.BatchGetDealsFunc(ids)
 }
 
 // CreateDeal makes a new Deal
