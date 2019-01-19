@@ -87,6 +87,13 @@ func main() {
 		Handle: upload,
 	}
 
+	validateCmd := climax.Command{
+		Name:   "validate",
+		Brief:  "Validate a TOML file",
+		Usage:  "go run main.go validate file.toml",
+		Handle: validate,
+	}
+
 	// createCmd := climax.Command{
 	// 	Name:  "create",
 	// 	Brief: "Create one of the models",
@@ -95,6 +102,7 @@ func main() {
 
 	cli.AddCommand(generateCmd)
 	cli.AddCommand(uploadCmd)
+	cli.AddCommand(validateCmd)
 	cli.Run()
 }
 
@@ -302,6 +310,7 @@ func upload(ctx climax.Context) int {
 // !! this needs to stay  up to date with the fields in models
 type locationInfo struct {
 	Name           string
+	CampusSlug     string `toml:"campus"`
 	DisplayAddress string `toml:"addr"`
 	Latitude       string
 	Longitude      string
@@ -319,6 +328,32 @@ type dealInfo struct {
 	Start  string
 	End    string
 	Types  []string
+}
+
+func validate(ctx climax.Context) int {
+	files := ctx.Args
+	fmt.Println("[*] validating ", files)
+
+	if len(files) == 0 {
+		fmt.Println("[!] need files to validate")
+		return 1
+	}
+
+	for _, f := range files {
+		contents := &locationInfo{}
+		ret, err := toml.DecodeFile(f, &contents)
+		if err != nil {
+			fmt.Println("Err decoding " + err.Error())
+			return 1
+		}
+
+		if len(ret.Undecoded()) != 0 {
+			fmt.Printf("[!] unable to decode these correctly:\n\t%v\n\n", ret.Undecoded())
+		}
+
+		fmt.Printf("[*] data:\n\n%+v\n", contents)
+	}
+	return 0
 }
 
 func handleFile(campusSlug, path string, client *deals.Client) error {
