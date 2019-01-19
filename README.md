@@ -24,6 +24,8 @@ Since there is no serverless-offline plugin for Go, to check functionality we ca
 
 At some point this can be extended to write fairly decent integration tests, but for now it's effective for manual testing.  One of the benefits of it being a little more difficult to test locally than some random script is that it pushes TDD (Test Driven Development), because running `go test` is significantly faster than the using `local` or `prod` environments.  Another option for slightly less manual testing is to use the `local` env with `go test`, which lets you run the tests against Localstack but it does require more initial setup because you have to get the DB into the correct state you're expecting for each test.
 
+When running local DynamoDB, sometimes it can be convenient to dig through what is in the database visually, without making a bunch of aws cli calls.  [Dynamodb-admin](https://github.com/aaronshaf/dynamodb-admin) has been added, which is a fantastic browser based admin tool.  `npm run admin` to serve it on `http://localhost:8001`.
+
 ### Tools
 
 As useful things get created for development, they will live in `tools/`.  The README in that directory has a wishlist of possible options if we have extra time.

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon local.go",
     "sls": "sls",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "admin": "DYNAMO_ENDPOINT=http://localhost:4569 dynamodb-admin -o"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
   },
   "homepage": "https://github.com/I-Dont-Remember/deals-api#readme",
   "dependencies": {
+    "dynamodb-admin": "^3.1.1",
     "serverless": "^1.35.1"
   },
   "devDependencies": {
