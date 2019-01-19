@@ -255,13 +255,19 @@ func upload(ctx climax.Context) int {
 	}
 
 	newBasePath, ok := ctx.Get("basePath")
-	if !ok {
-		newBasePath = ""
+	if ok {
+		basePath = newBasePath
 	}
 
-	dir, ok := ctx.Get("directory")
+	client := deals.New(basePath)
 
+	// create the campus if it doesn't exist
+	_, err := client.CreateCampus(campusSlug, campusSlug)
+	check(err, "error creating campus for upload")
+
+	dir, ok := ctx.Get("directory")
 	if ok {
+		ctx.Log("using directory " + dir)
 		// get all .toml files from directory
 		absPath, err := filepath.Abs(dir)
 		if err != nil {
@@ -270,7 +276,10 @@ func upload(ctx climax.Context) int {
 		}
 
 		err = filepath.Walk(absPath, func(path string, info os.FileInfo, err error) error {
-			fileErr := handleFile(campusSlug, path, newBasePath)
+			if info.IsDir() {
+				return nil
+			}
+			fileErr := handleFile(campusSlug, path, client)
 			return fileErr
 
 		})
@@ -282,7 +291,7 @@ func upload(ctx climax.Context) int {
 		files := ctx.Args
 
 		for _, f := range files {
-			handleFile(campusSlug, f, newBasePath)
+			handleFile(campusSlug, f, client)
 		}
 	}
 
@@ -312,11 +321,12 @@ type dealInfo struct {
 	Types  []string
 }
 
-func handleFile(campusSlug, path, newBasePath string) error {
+func handleFile(campusSlug, path string, client *deals.Client) error {
 	if filepath.Ext(strings.TrimSpace(path)) == ".toml" {
 		fmt.Println("[*] handling " + path)
 	} else {
 		fmt.Println("[!] skipping " + path)
+		return nil
 	}
 
 	contents := &locationInfo{}
@@ -332,10 +342,6 @@ func handleFile(campusSlug, path, newBasePath string) error {
 
 	fmt.Println(contents)
 
-	if newBasePath != "" {
-		basePath = newBasePath
-	}
-	client := deals.New(basePath)
 	// create a location from information
 	location, err := client.CreateLocation(campusSlug, contents.Name,
 		contents.DisplayAddress,

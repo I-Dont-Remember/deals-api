@@ -43,6 +43,10 @@ func (c *Client) post(path string, data map[string]interface{}) ([]byte, error) 
 
 	respBody, _ := ioutil.ReadAll(response.Body)
 
+	if response.StatusCode > 300 {
+		return []byte{}, fmt.Errorf("[!] code:%d body:%s", response.StatusCode, respBody)
+	}
+
 	return respBody, nil
 }
 
