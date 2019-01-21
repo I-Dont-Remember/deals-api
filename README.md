@@ -18,7 +18,7 @@ To get setup you must have Node & Go setup on your machine.  For Node, it is rec
 
 To be able to deploy the application, you must have AWS credentials setup with the `aws-cli` tool.
 
-An environment variable is used to differentiate between the different options.`API_ENV` can select from either `local`: for using [localstack](https://github.com/localstack/localstack), `prod`: for deployments on AWS, or `test`: for running tests with the Mock DB. 
+An environment variable is used to differentiate between the different options.`API_ENV` can select from either `local`: for using [localstack](https://github.com/localstack/localstack), `prod` or `dev`: for deployments on AWS, or `test`: for running tests with the Mock DB. 
 
 Since there is no serverless-offline plugin for Go, to check functionality we can use a locally running DynamoDB and come fairly close to how AWS runs.  By keeping most of the logic inside packages, it is easy to import and pass requests to the logic functions. `go run local.go` connects while serving the API on `localhost` (This has been extended with Nodemon for live reloading, `npm start` will run the server and on file changes send SIGKILL to the old and start a new server.  Configuration is stored in `nodemon.json`).  It uses the Echo web framework and a function that massages the request/response objects from Echo to match the inputs and outputs of the Lambda handler functions.  While convenient for testing, it does need a vigilant watch to make sure it matches the expected url paths & other things that API Gateway/Serverless handle.
 

@@ -5,7 +5,7 @@ provider:
   runtime: go1.x
   region: us-east-2
   environment:
-    API_ENV: prod
+    API_ENV: ${opt:stage, self:provider.stage}
     API_AUTH: ${env:API_AUTH}
   iamRoleStatements:
     - Effect: Allow

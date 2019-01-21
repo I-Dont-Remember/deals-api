@@ -70,7 +70,7 @@ func Connect() (DB, error) {
 	localEndpoint := "http://localhost:4569/"
 	env := os.Getenv("API_ENV")
 
-	if env != "local" && env != "prod" {
+	if env != "local" && env != "prod" && env != "dev" {
 		// panic since we make important decisions based on env type
 		// and don't want any uncertainties
 		panic("Unknown API_ENV choice '" + env + "'")

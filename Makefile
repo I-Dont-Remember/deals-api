@@ -24,5 +24,9 @@ build:
 test-all:
 	(cd functions && go test ./...)
 
-deploy: build
-	if test -z "$$API_AUTH"; then { echo "API_AUTH not set"; exit 1; } else (npm run sls -- deploy --verbose) fi
+dev-deploy: build
+	if test -z "$$API_AUTH"; then { echo "API_AUTH not set"; exit 1; } else (npm run sls -- deploy --stage dev --verbose) fi
+
+
+prod-deploy: build
+	if test -z "$$API_AUTH"; then { echo "API_AUTH not set"; exit 1; } else (npm run sls -- deploy --stage prod --verbose) fi
