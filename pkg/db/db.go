@@ -15,13 +15,15 @@ import (
 )
 
 const (
-	campusTable   = "Campuses"
-	dealTable     = "Deals"
-	locationTable = "Locations"
+	campusTable    = "Campuses"
+	dealTable      = "Deals"
+	locationTable  = "Locations"
+	analyticsTable = "Analytics"
 )
 
 // DB is a wrapper to allow easy mocking & swapping of persistent storage
 type DB interface {
+	InputSearchAnalytics(s models.SearchData) error
 	CreateCampus(models.Campus) error
 	RemoveCampus(slug string) error
 	GetCampuses() ([]models.Campus, error)
@@ -48,20 +50,21 @@ type Dynamo struct {
 
 // Mock mocks DB
 type Mock struct {
-	CreateCampusFunc   func(models.Campus) error
-	RemoveCampusFunc   func(slug string) error
-	GetCampusesFunc    func() ([]models.Campus, error)
-	GetCampusFunc      func(slug string) (models.Campus, error)
-	UpdateCampusFunc   func(models.Campus) (models.Campus, error)
-	CreateLocationFunc func(models.Location) error
-	RemoveLocationFunc func(id string) error
-	GetLocationsFunc   func() ([]models.Location, error)
-	GetLocationFunc    func(id string) (models.Location, error)
-	UpdateLocationFunc func(models.Location) (models.Location, error)
-	GetDealsFunc       func() ([]models.Deal, error)
-	BatchGetDealsFunc  func(ids []string) ([]models.Deal, error)
-	RemoveDealFunc     func(id string) error
-	CreateDealFunc     func(models.Deal) error
+	CreateCampusFunc         func(models.Campus) error
+	RemoveCampusFunc         func(slug string) error
+	GetCampusesFunc          func() ([]models.Campus, error)
+	GetCampusFunc            func(slug string) (models.Campus, error)
+	UpdateCampusFunc         func(models.Campus) (models.Campus, error)
+	CreateLocationFunc       func(models.Location) error
+	RemoveLocationFunc       func(id string) error
+	GetLocationsFunc         func() ([]models.Location, error)
+	GetLocationFunc          func(id string) (models.Location, error)
+	UpdateLocationFunc       func(models.Location) (models.Location, error)
+	GetDealsFunc             func() ([]models.Deal, error)
+	BatchGetDealsFunc        func(ids []string) ([]models.Deal, error)
+	RemoveDealFunc           func(id string) error
+	CreateDealFunc           func(models.Deal) error
+	InputSearchAnalyticsFunc func(s models.SearchData) error
 }
 
 // Connect returns a Dynamo connection; local or remote
@@ -89,6 +92,27 @@ func Connect() (DB, error) {
 		return nil, err
 	}
 	return &Dynamo{conn: dynamodb.New(sess)}, nil
+}
+
+// InputSearchAnalytics used for quickly getting search analytics til we have a better way
+func (db Dynamo) InputSearchAnalytics(s models.SearchData) error {
+	av, err := dynamodbattribute.MarshalMap(s)
+	if err != nil {
+		return err
+	}
+
+	pi := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(analyticsTable),
+	}
+
+	_, err = db.conn.PutItem(pi)
+	return err
+}
+
+//InputSearchAnalytics - needed mock because we have to keep interface the same; laymee
+func (m Mock) InputSearchAnalytics(s models.SearchData) error {
+	return m.InputSearchAnalyticsFunc(s)
 }
 
 // CreateCampus makes a new Campus

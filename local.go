@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/I-Dont-Remember/deals-api/functions/analytics"
 	"github.com/I-Dont-Remember/deals-api/functions/deals"
 
 	"github.com/I-Dont-Remember/deals-api/functions/locations"
@@ -99,6 +100,8 @@ func main() {
 	e.GET("/locations/:location-id/deals", adjust(deals.Get))
 	e.POST("/locations/:location-id/deals", adjust(deals.Create))
 	e.DELETE("/deals/:deal-id", adjust(deals.Remove))
+
+	e.POST("/analytics", adjust(analytics.Analytics))
 
 	e.Logger.Fatal(e.Start(port))
 }

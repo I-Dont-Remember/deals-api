@@ -27,6 +27,15 @@ package:
     - ./bin/**
 
 functions:
+
+    analytics:
+      handler: bin/analytics
+      events:
+        - http:
+            path: /analytics
+            method: post
+
+
     create-campus:
       handler: bin/create-campus
       events:
@@ -78,7 +87,7 @@ functions:
       handler: bin/not-implemented
       events:
         - http:
-            path: /{slug}/search
+            path: /campuses/{slug}/search
             method: get
             request:
               parameters:

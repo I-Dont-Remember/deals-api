@@ -2,6 +2,7 @@
 
 build:
 	env GOOS=linux go build -ldflags="-s -w" -o bin/not-implemented functions/not-implemented.go
+	env GOOS=linux go build -ldflags="-s -w" -o bin/analytics functions/analytics/post/main.go
 	for dir in functions/deals/*/;  do \
 		echo "$$dir"; \
 		name="$$(basename $$dir)"; \

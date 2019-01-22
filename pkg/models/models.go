@@ -54,3 +54,9 @@ type Campus struct {
 	DisplayName string   `json:"display_name"`
 	Locations   []string `json:"locations"`
 }
+
+// Search is a struct for our minimal search analytics function
+type SearchData struct {
+	Timestamp  string `json:"timestamp"`
+	SearchTerm string `json:"search_term"`
+}

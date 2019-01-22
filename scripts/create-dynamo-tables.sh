@@ -3,6 +3,7 @@ command="awslocal"
 dealsTable="Deals"
 locationsTable="Locations"
 campusesTable="Campuses"
+analyticsTable="Analytics"
 
 while getopts "rh" opt; do
     case $opt in
@@ -42,3 +43,10 @@ $command dynamodb create-table --table-name "$campusesTable" \
     --attribute-definitions AttributeName=slug,AttributeType=S \
     --key-schema AttributeName=slug,KeyType=HASH \
     --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+
+echo "Creating $analyticsTable table..."
+$command dynamodb create-table --table-name "$analyticsTable" \
+    --attribute-definitions AttributeName=timestamp,AttributeType=S \
+    --key-schema AttributeName=timestamp,KeyType=HASH \
+    --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+
