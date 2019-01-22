@@ -2,6 +2,7 @@ package locations
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -15,8 +16,13 @@ import (
 )
 
 type locationBody struct {
-	Name           string `json:"name"`
-	DisplayAddress string `json:"address"`
+	Name           string   `json:"name"`
+	DisplayAddress string   `json:"display_address"`
+	ImageLink      string   `json:"image_link"`
+	PhoneNumber    string   `json:"phone_number"`
+	Website        string   `json:"website"`
+	YelpLink       string   `json:"yelp_link"`
+	Hours          []string `json:"hours"`
 }
 
 // Create makes a new location
@@ -43,6 +49,8 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 		return helpers.ErrResponse("Error getting body", err, http.StatusInternalServerError)
 	}
 
+	fmt.Printf("Body received: %+v\n", body)
+
 	newID, err := uuid.NewV4()
 	if err != nil {
 		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)
@@ -54,10 +62,16 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 	}
 
 	location := models.Location{
-		ID:         newID.String(),
-		Name:       body.Name,
-		CampusSlug: slug,
-		Deals:      []string{},
+		ID:             newID.String(),
+		Name:           body.Name,
+		CampusSlug:     slug,
+		DisplayAddress: body.DisplayAddress,
+		ImageLink:      body.ImageLink,
+		PhoneNumber:    body.PhoneNumber,
+		Website:        body.Website,
+		YelpLink:       body.YelpLink,
+		Hours:          body.Hours,
+		Deals:          []string{},
 	}
 
 	if body.DisplayAddress != "" {
