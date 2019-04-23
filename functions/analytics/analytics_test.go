@@ -16,7 +16,7 @@ func Test_Analytics(t *testing.T) {
 
 	rt := helpers.NewRequestTest()
 	rt.Description = "201 posted the search data"
-	rt.BodyMap = map[string]string{"timestamp": "1548118356297", "search_term": "wings"}
+	rt.BodyMap = map[string]string{"timestamp": "1548118356297", "searchTerm": "wings"}
 	rt.Request.PathParameters = map[string]string{"slug": "madison-wi"}
 	rt.ExpectedStatus = 201
 	rt.MockClient.InputSearchAnalyticsFunc = func(s models.SearchData) error {

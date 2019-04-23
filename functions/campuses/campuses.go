@@ -2,6 +2,7 @@ package campuses
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -59,6 +60,7 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 		return helpers.ErrResponse("Failed authenticating", err, http.StatusUnauthorized)
 	}
 
+	fmt.Printf("CreateCampus body %+v\n", request.Body)
 	body := campusBody{}
 	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
 		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)

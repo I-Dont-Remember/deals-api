@@ -58,5 +58,5 @@ type Campus struct {
 // Search is a struct for our minimal search analytics function
 type SearchData struct {
 	Timestamp  string `json:"timestamp"`
-	SearchTerm string `json:"search_term"`
+	SearchTerm string `json:"searchTerm"`
 }

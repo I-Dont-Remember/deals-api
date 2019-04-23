@@ -2,6 +2,7 @@ package deals
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -67,6 +68,7 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 	}
 
 	// TODO: need a better way to validate we've gotten all necessary info & it's gucci
+	fmt.Printf("CreateDeal body %+v\n", request.Body)
 	body := dealBody{}
 	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
 		return helpers.ErrResponse("Internal error", err, http.StatusInternalServerError)

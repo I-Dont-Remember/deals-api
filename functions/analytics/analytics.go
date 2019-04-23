@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/I-Dont-Remember/deals-api/pkg/db"
@@ -19,6 +20,8 @@ func Analytics(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatew
 	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
 		return helpers.ErrResponse("Error getting search body", err, http.StatusInternalServerError)
 	}
+
+	fmt.Printf("%+v\n", body)
 
 	err := db.InputSearchAnalytics(body)
 	if err != nil {

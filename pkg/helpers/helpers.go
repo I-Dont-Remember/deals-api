@@ -3,6 +3,7 @@ package helpers
 // most of this file adapted from https://ewanvalentine.io/serverless-start-ups-in-golang-part-1/
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 
@@ -51,10 +52,16 @@ func ErrResponse(msg string, err error, statusCode int) (events.APIGatewayProxyR
 	}
 
 	if err != nil {
+		fmt.Println("ErrResponse")
+		fmt.Println(err.Error())
 		data["error"] = err.Error()
 	}
 
-	body, _ := json.Marshal(data)
+	body, err := json.Marshal(data)
+	if err != nil {
+		body = []byte("failed marshalling error")
+	}
+
 	return events.APIGatewayProxyResponse{
 		Body:       string(body),
 		StatusCode: statusCode,

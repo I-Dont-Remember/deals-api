@@ -26,6 +26,8 @@ At some point this can be extended to write fairly decent integration tests, but
 
 When running local DynamoDB, sometimes it can be convenient to dig through what is in the database visually, without making a bunch of aws cli calls.  [Dynamodb-admin](https://github.com/aaronshaf/dynamodb-admin) has been added, which is a fantastic browser based admin tool.  `npm run admin` to serve it on `http://localhost:8001`.
 
+Having `dev` and `prod` living on AWS means we need separate databases.  Prod will use the actual name, such as Locations, and `dev` will use it with a suffix, e.g. Location-dev.
+
 ### Tools
 
 As useful things get created for development, they will live in `tools/`.  The README in that directory has a wishlist of possible options if we have extra time.

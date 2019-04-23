@@ -14,13 +14,15 @@ import (
 
 // Client is an API client
 type Client struct {
-	basePath string
+	basePath  string
+	authValue string
 }
 
 // New creates a new API client
-func New(basePath string) *Client {
+func New(basePath string, authValue string) *Client {
 	return &Client{
-		basePath: basePath,
+		basePath:  basePath,
+		authValue: authValue,
 	}
 }
 
@@ -35,7 +37,8 @@ func (c *Client) post(path string, data map[string]interface{}) ([]byte, error) 
 	body := bytes.NewBuffer(str)
 	request, _ := http.NewRequest("POST", url, body)
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("X-Dot-Auth", "local")
+	request.Header.Set("X-Dot-Auth", c.authValue)
+	fmt.Printf("Request: %+v\n", request)
 	response, postErr := (&http.Client{}).Do(request)
 	if postErr != nil {
 		return []byte{}, errors.New("Failed during post - " + postErr.Error())

@@ -44,6 +44,7 @@ func Create(request events.APIGatewayProxyRequest, db db.DB) (events.APIGatewayP
 		return helpers.ErrResponse("Bad request", err, http.StatusBadRequest)
 	}
 
+	fmt.Printf("CreateLocation body %+v\n", request.Body)
 	body := locationBody{}
 	if err := json.Unmarshal([]byte(request.Body), &body); err != nil {
 		return helpers.ErrResponse("Error getting body", err, http.StatusInternalServerError)

@@ -5,11 +5,47 @@ locationsTable="Locations"
 campusesTable="Campuses"
 analyticsTable="Analytics"
 
-while getopts "rh" opt; do
+
+createDeals() {
+    echo "Creating $1 table..."
+    $command dynamodb create-table --table-name "$1" \
+        --attribute-definitions AttributeName=id,AttributeType=S \
+        --key-schema AttributeName=id,KeyType=HASH \
+        --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+}
+
+createLocations() {
+    echo "Creating $1 table..."
+    $command dynamodb create-table --table-name "$1" \
+        --attribute-definitions AttributeName=id,AttributeType=S \
+        --key-schema AttributeName=id,KeyType=HASH \
+        --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+}
+
+createCampuses() {
+    echo "Creating $1 table..."
+    $command dynamodb create-table --table-name "$1" \
+        --attribute-definitions AttributeName=slug,AttributeType=S \
+        --key-schema AttributeName=slug,KeyType=HASH \
+        --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+}
+
+createAnalytics() {
+    echo "Creating $1 table..."
+    $command dynamodb create-table --table-name "$1" \
+        --attribute-definitions AttributeName=timestamp,AttributeType=S \
+        --key-schema AttributeName=timestamp,KeyType=HASH \
+        --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+}
+
+while getopts "rhd" opt; do
     case $opt in
         r)
             command="aws"
             echo "Creating tables in AWS"
+        ;;
+        d)
+            dev=true
         ;;
         h)
             echo "Usage: $0 [ -r ] [ -h ], -r to use aws instead of awslocal"
@@ -26,27 +62,14 @@ while getopts "rh" opt; do
 done
 
 # TODO: long-term todo, learn how to use Dynamo better with secondary indexes & whatnot
-echo "Creating $dealsTable table..."
-$command dynamodb create-table --table-name "$dealsTable" \
-    --attribute-definitions AttributeName=id,AttributeType=S \
-    --key-schema AttributeName=id,KeyType=HASH \
-    --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+createCampuses "$campusesTable"
+createLocations "$locationsTable"
+createDeals "$dealsTable"
+createAnalytics "$analyticsTable"
 
-echo "Creating $locationsTable table..."
-$command dynamodb create-table --table-name "$locationsTable" \
-    --attribute-definitions AttributeName=id,AttributeType=S \
-    --key-schema AttributeName=id,KeyType=HASH \
-    --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
-
-echo "Creating $campusesTable table..."
-$command dynamodb create-table --table-name "$campusesTable" \
-    --attribute-definitions AttributeName=slug,AttributeType=S \
-    --key-schema AttributeName=slug,KeyType=HASH \
-    --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
-
-echo "Creating $analyticsTable table..."
-$command dynamodb create-table --table-name "$analyticsTable" \
-    --attribute-definitions AttributeName=timestamp,AttributeType=S \
-    --key-schema AttributeName=timestamp,KeyType=HASH \
-    --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
-
+if [ ! -z $dev ]; then
+    createCampuses "$campusesTable"-dev
+    createLocations "$locationsTable"-dev
+    createDeals "$dealsTable"-dev
+    createAnalytics "$analyticsTable"-dev
+fi

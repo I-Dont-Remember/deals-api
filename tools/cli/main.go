@@ -31,7 +31,7 @@ func main() {
 	generateCmd := climax.Command{
 		Name:  "generate",
 		Brief: "Generate fake development data in the local DB",
-		Usage: "go run main.go generate -c 2 -l 1,2 -d 3,5",
+		Usage: "go run main.go generate -c 2 -l 1,2 -d 3,5 -a auth-string",
 		Help: "Make sure to start up both the local API server as well as " +
 			"Localstack & run the table creation script. Seems like this " +
 			"should be automated.",
@@ -55,6 +55,12 @@ func main() {
 				Variable: true,
 				Usage:    "-d 8,15",
 			},
+			{
+				Name:     "authValue",
+				Short:    "a",
+				Variable: true,
+				Usage:    "-a auth-header-string",
+			},
 		},
 
 		Handle: generateData,
@@ -63,7 +69,7 @@ func main() {
 	uploadCmd := climax.Command{
 		Name:  "upload",
 		Brief: "Upload deals and locations from files or pass a directory",
-		Usage: "go run main.go upload -c uw-madison [ -b http://api.com/api/  ] [ -d directory/ | ./file1.toml ./file2.toml ]",
+		Usage: "go run main.go upload -c uw-madison [ -b http://api.com/api/  ] [ -a auth-string ][ -d directory/ | ./file1.toml ./file2.toml ]",
 		Flags: []climax.Flag{
 			{
 				Name:     "campusSlug",
@@ -82,6 +88,11 @@ func main() {
 				Short:    "b",
 				Variable: true,
 				Usage:    "-b http://localhost:7895",
+			},
+			{Name: "authValue",
+				Short:    "a",
+				Variable: true,
+				Usage:    "-a auth-header-string",
 			},
 		},
 		Handle: upload,
@@ -169,7 +180,14 @@ func generateData(ctx climax.Context) int {
 		return 1
 	}
 
-	generate(numCampuses, maxLocations, minLocations, maxDeals, minDeals)
+	var authValue string
+	if value, ok := ctx.Get("authValue"); ok {
+		authValue = value
+	} else {
+		authValue = "local"
+	}
+
+	generate(numCampuses, maxLocations, minLocations, maxDeals, minDeals, authValue)
 	return 0
 }
 
@@ -203,11 +221,11 @@ func getRandomTypes() []string {
 }
 
 /// generate a big pile of fake data for using in the local DB
-func generate(numCampuses, maxLocations, minLocations, maxDeals, minDeals int) {
+func generate(numCampuses, maxLocations, minLocations, maxDeals, minDeals int, authValue string) {
 	rand.Seed(time.Now().UnixNano())
 	// test 1 function MVP just to make progress cuz all cli things suck
 
-	client := deals.New(basePath)
+	client := deals.New(basePath, authValue)
 
 	for i := 0; i < numCampuses; i++ {
 		slug := gofakeit.Username()
@@ -267,7 +285,14 @@ func upload(ctx climax.Context) int {
 		basePath = newBasePath
 	}
 
-	client := deals.New(basePath)
+	var authValue string
+	if value, ok := ctx.Get("authValue"); ok {
+		authValue = value
+	} else {
+		authValue = "local"
+	}
+
+	client := deals.New(basePath, authValue)
 
 	// create the campus if it doesn't exist
 	_, err := client.CreateCampus(campusSlug, campusSlug)

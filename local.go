@@ -74,7 +74,7 @@ func adjust(fn func(events.APIGatewayProxyRequest, db.DB) (events.APIGatewayProx
 func main() {
 	os.Setenv("API_ENV", "local")
 	// Make sure to set the auth env variable as if we were deployed
-	os.Setenv("API_AUTH", "local")
+	os.Setenv("API_AUTH", "whodembois")
 	port := ":4500"
 
 	e := echo.New()

@@ -3,6 +3,7 @@
 package db
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -12,13 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-)
-
-const (
-	campusTable    = "Campuses"
-	dealTable      = "Deals"
-	locationTable  = "Locations"
-	analyticsTable = "Analytics"
 )
 
 // DB is a wrapper to allow easy mocking & swapping of persistent storage
@@ -45,7 +39,11 @@ type DB interface {
 
 // Dynamo implements DB
 type Dynamo struct {
-	conn *dynamodb.DynamoDB
+	conn           *dynamodb.DynamoDB
+	campusTable    string
+	dealTable      string
+	locationTable  string
+	analyticsTable string
 }
 
 // Mock mocks DB
@@ -79,6 +77,19 @@ func Connect() (DB, error) {
 		panic("Unknown API_ENV choice '" + env + "'")
 	}
 
+	d := &Dynamo{}
+	if env == "prod" || env == "local" {
+		d.campusTable = "Campuses"
+		d.dealTable = "Deals"
+		d.locationTable = "Locations"
+		d.analyticsTable = "Analytics"
+	} else if env == "dev" {
+		d.campusTable = "Campuses-dev"
+		d.dealTable = "Deals-dev"
+		d.locationTable = "Locations-dev"
+		d.analyticsTable = "Analytics-dev"
+	}
+
 	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
 	if env == "local" {
 		sess, err = session.NewSession(
@@ -91,7 +102,8 @@ func Connect() (DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Dynamo{conn: dynamodb.New(sess)}, nil
+	d.conn = dynamodb.New(sess)
+	return d, nil
 }
 
 // InputSearchAnalytics used for quickly getting search analytics til we have a better way
@@ -101,9 +113,10 @@ func (db Dynamo) InputSearchAnalytics(s models.SearchData) error {
 		return err
 	}
 
+	fmt.Printf("%+v\n", db)
 	pi := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(analyticsTable),
+		TableName: aws.String(db.analyticsTable),
 	}
 
 	_, err = db.conn.PutItem(pi)
@@ -124,7 +137,7 @@ func (db Dynamo) CreateCampus(c models.Campus) error {
 
 	pi := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(campusTable),
+		TableName: aws.String(db.campusTable),
 	}
 
 	_, err = db.conn.PutItem(pi)
@@ -144,7 +157,7 @@ func (db Dynamo) RemoveCampus(slug string) error {
 				S: aws.String(slug),
 			},
 		},
-		TableName: aws.String(campusTable),
+		TableName: aws.String(db.campusTable),
 	}
 	// TODO: this returns the same val,err when using a non-existent key, decide if we should throw error on invalid key
 	_, err := db.conn.DeleteItem(di)
@@ -161,7 +174,7 @@ func (db Dynamo) GetCampuses() ([]models.Campus, error) {
 	campuses := []models.Campus{}
 
 	si := &dynamodb.ScanInput{
-		TableName: aws.String(campusTable),
+		TableName: aws.String(db.campusTable),
 	}
 	result, err := db.conn.Scan(si)
 	if err != nil {
@@ -195,7 +208,7 @@ func (db Dynamo) GetCampus(slug string) (models.Campus, error) {
 				S: aws.String(slug),
 			},
 		},
-		TableName: aws.String(campusTable),
+		TableName: aws.String(db.campusTable),
 	}
 	result, err := db.conn.GetItem(gi)
 	if err != nil {
@@ -235,7 +248,7 @@ func (db Dynamo) GetLocations() ([]models.Location, error) {
 	locations := []models.Location{}
 
 	si := &dynamodb.ScanInput{
-		TableName: aws.String(locationTable),
+		TableName: aws.String(db.locationTable),
 	}
 	result, err := db.conn.Scan(si)
 	if err != nil {
@@ -269,7 +282,7 @@ func (db Dynamo) GetLocation(id string) (models.Location, error) {
 				S: aws.String(id),
 			},
 		},
-		TableName: aws.String(locationTable),
+		TableName: aws.String(db.locationTable),
 	}
 	result, err := db.conn.GetItem(gi)
 	if err != nil {
@@ -310,7 +323,7 @@ func (db Dynamo) CreateLocation(l models.Location) error {
 
 	pi := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(locationTable),
+		TableName: aws.String(db.locationTable),
 	}
 
 	_, err = db.conn.PutItem(pi)
@@ -330,7 +343,7 @@ func (db Dynamo) RemoveLocation(id string) error {
 				S: aws.String(id),
 			},
 		},
-		TableName: aws.String(locationTable),
+		TableName: aws.String(db.locationTable),
 	}
 	// TODO: this returns the same val,err when using a non-existent key, decide if we should throw error on invalid key
 	_, err := db.conn.DeleteItem(di)
@@ -347,7 +360,7 @@ func (db Dynamo) GetDeals() ([]models.Deal, error) {
 	deals := []models.Deal{}
 
 	si := &dynamodb.ScanInput{
-		TableName: aws.String(dealTable),
+		TableName: aws.String(db.dealTable),
 	}
 	result, err := db.conn.Scan(si)
 	if err != nil {
@@ -384,7 +397,7 @@ func (db Dynamo) BatchGetDeals(ids []string) ([]models.Deal, error) {
 	}
 
 	requestItems := map[string]*dynamodb.KeysAndAttributes{}
-	requestItems[dealTable] = &dynamodb.KeysAndAttributes{Keys: keys}
+	requestItems[db.dealTable] = &dynamodb.KeysAndAttributes{Keys: keys}
 
 	input := &dynamodb.BatchGetItemInput{
 		RequestItems: requestItems,
@@ -394,7 +407,7 @@ func (db Dynamo) BatchGetDeals(ids []string) ([]models.Deal, error) {
 		return nil, err
 	}
 
-	dynamoDeals, ok := output.Responses[dealTable]
+	dynamoDeals, ok := output.Responses[db.dealTable]
 	if !ok {
 		// didn't have our table in response; is this an error?
 		return []models.Deal{}, nil
@@ -428,7 +441,7 @@ func (db Dynamo) CreateDeal(d models.Deal) error {
 
 	pi := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(dealTable),
+		TableName: aws.String(db.dealTable),
 	}
 
 	_, err = db.conn.PutItem(pi)
@@ -448,7 +461,7 @@ func (db Dynamo) RemoveDeal(id string) error {
 				S: aws.String(id),
 			},
 		},
-		TableName: aws.String(dealTable),
+		TableName: aws.String(db.dealTable),
 	}
 	_, err := db.conn.DeleteItem(di)
 	return err
