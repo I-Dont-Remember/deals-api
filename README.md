@@ -48,6 +48,7 @@ A rough primer on what steps are necessary to add a new endpoint to the basic CR
 * Add the endpoint to the `serverless.yml`
 * Add the endpoint to the local API, `local.go`
 
+TODO: This is unnecessarily complex, and our build sizes are large because of all the shared code. We should switch architecture to a single binary that handles all routes and do routing internally to different handlers.
 
 ## Testing
 

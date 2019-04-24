@@ -8,6 +8,7 @@ import (
 
 	"github.com/I-Dont-Remember/deals-api/functions/analytics"
 	"github.com/I-Dont-Remember/deals-api/functions/deals"
+	"github.com/I-Dont-Remember/deals-api/functions/email"
 
 	"github.com/I-Dont-Remember/deals-api/functions/locations"
 
@@ -102,6 +103,7 @@ func main() {
 	e.DELETE("/deals/:deal-id", adjust(deals.Remove))
 
 	e.POST("/analytics", adjust(analytics.Analytics))
+	e.POST("/email", adjust(email.Receive))
 
 	e.Logger.Fatal(e.Start(port))
 }

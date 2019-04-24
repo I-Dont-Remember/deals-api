@@ -36,6 +36,12 @@ functions:
             path: /analytics
             method: post
 
+    email:
+      handler: bin/email
+      events:
+        - http:
+            path: /email
+            method: post
 
     create-campus:
       handler: bin/create-campus
