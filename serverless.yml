@@ -21,30 +21,63 @@ provider:
         # Can either do by specific arn or wildcard ** Should probably not do this so insecurely **
         - "arn:aws:dynamodb:${self:provider.region}:*:table/*"
 
+# part of packaging trouble can be solved with 'individually'
+# https://serverless.com/framework/docs/providers/aws/guide/packaging/
 package:
+  individually: true
   exclude:
     - ./**
-  include:
-    - ./bin/**
+
 
 functions:
-
     analytics:
       handler: bin/analytics
+      package:
+          include:
+            - ./bin/analytics
       events:
         - http:
             path: /analytics
             method: post
 
-    email:
-      handler: bin/email
+
+    sms:
+      runtime: python3.7
+      handler: functions/sms/handler.process
+      package:
+        individually: true
+        exclude:
+          - ./**
+        include:
+          - functions/sms/handler.py
+        events:
+          - http:
+              path: /sms
+              method: post
+
+    email-processing:
+      runtime: python3.7
+      handler: functions/email/handler.process
+      package:
+        individually: true
+        exclude:
+          - ./**
+        include:
+          - functions/email/handler.py
       events:
-        - http:
-            path: /email
-            method: post
+        - s3:
+            bucket: getdealsontap-update-emails
+            event: s3:ObjectCreated:*
+
+    # email-forwarding:
+    #   runtime: node8.10
+    #   handler: functions/email/
 
     create-campus:
       handler: bin/create-campus
+      package:
+          include:
+            - ./bin/create-campus
       events:
         - http:
             path: campuses
@@ -52,6 +85,9 @@ functions:
 
     get-campuses:
       handler: bin/get-campuses
+      package:
+          include:
+            - ./bin/get-campuses
       events:
         - http:
             path: campuses
@@ -59,6 +95,9 @@ functions:
 
     get-campus:
       handler: bin/get-campus
+      package:
+          include:
+            - ./bin/get-campus
       events:
         - http:
             path: campuses/{slug}
@@ -70,6 +109,9 @@ functions:
 
     get-locations:
       handler: bin/get-locations
+      package:
+          include:
+            - ./bin/get-locations
       events:
         - http:
             path: campuses/{slug}/locations
@@ -81,6 +123,9 @@ functions:
 
     get-current:
       handler: bin/not-implemented
+      package:
+          include:
+            - ./bin/not-implemented
       events:
         - http:
             path: /{slug}/current
@@ -92,6 +137,9 @@ functions:
 
     search:
       handler: bin/not-implemented
+      package:
+          include:
+            - ./bin/not-implemented
       events:
         - http:
             path: /campuses/{slug}/search
@@ -103,6 +151,9 @@ functions:
 
     create-location:
       handler: bin/create-location
+      package:
+          include:
+            - ./bin/create-location
       events:
           - http:
               path: campuses/{slug}/locations
@@ -114,6 +165,9 @@ functions:
 
     get-location:
       handler: bin/get-location
+      package:
+          include:
+            - ./bin/get-location
       events:
         - http:
             path: locations/{location-id}
@@ -125,6 +179,9 @@ functions:
 
     remove-location:
       handler: bin/remove-location
+      package:
+          include:
+            - ./bin/remove-location
       events:
         - http:
             path: locations/{location-id}
@@ -136,6 +193,9 @@ functions:
 
     get-deals:
       handler: bin/get-deals
+      package:
+          include:
+            - ./bin/get-deals
       events:
         - http:
             path: locations/{location-id}/deals
@@ -147,6 +207,9 @@ functions:
 
     create-deal:
       handler: bin/create-deal
+      package:
+          include:
+            - ./bin/create-deal
       events:
         - http:
             path: locations/{location-id}/deals
@@ -158,6 +221,9 @@ functions:
 
     remove-deal:
       handler: bin/remove-deal
+      package:
+          include:
+            - ./bin/remove-deal
       events:
         - http:
             path: /deals/{deal-id}
