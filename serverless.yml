@@ -65,9 +65,9 @@ functions:
         include:
           - functions/email/handler.py
       events:
-        - s3:
-            bucket: getdealsontap-update-emails
-            event: s3:ObjectCreated:*
+        - http:
+            path: /email
+            method: post
 
     # email-forwarding:
     #   runtime: node8.10
